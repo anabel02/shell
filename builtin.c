@@ -49,7 +49,7 @@ int lsh_exit(char **args)
 
 int lsh_launch(char **args)
 {
-    pid_t pid, wpid;
+    pid_t pid;
     int status;
 
     pid = fork();
@@ -58,6 +58,7 @@ int lsh_launch(char **args)
         if (execvp(args[0], args) == -1) {
             perror("lsh");
         }
+        // the execv() only return if error occurred.
         exit(EXIT_FAILURE);
     } else if (pid < 0) {
         // Error forking
@@ -65,7 +66,7 @@ int lsh_launch(char **args)
     } else {
         // Parent process
         do {
-            wpid = waitpid(pid, &status, WUNTRACED);
+            waitpid(pid, &status, WUNTRACED);
         } while (!WIFEXITED(status) && !WIFSIGNALED(status));
     }
 
