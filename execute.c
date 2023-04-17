@@ -17,7 +17,10 @@ int lsh_launch(char **args, int fd_in, int fd_out) {
     int status = 0;
 
     pid = fork();
-    if (pid == 0) {
+
+    if (pid < 0) {
+        perror("lsh");
+    } else if (pid == 0) {
         if (fd_in > 0) {
             dup2(fd_in, STDIN_FILENO);
             close(fd_in);
@@ -32,8 +35,6 @@ int lsh_launch(char **args, int fd_in, int fd_out) {
             perror("lsh execute");
         }
         exit(EXIT_FAILURE);
-    } else if (pid < 0) {
-        perror("lsh");
     } else {
         do {
             if (fd_in > 0) {
@@ -77,7 +78,7 @@ int execute_redirections(char **args, int fd_in, int fd_out) {
             int fd[2];
             pipe(fd);
             lsh_execute_simple(args, fd_in, fd[1]);
-            if(args[i + 1] != NULL) {
+            if (args[i + 1] != NULL) {
                 execute_redirections(args + i + 1, fd[0], fd_out);
             }
             close(fd[0]);
@@ -123,6 +124,7 @@ int execute_redirections(char **args, int fd_in, int fd_out) {
             if(args[i + 2] != NULL) {
                 execute_redirections(args + i + 2, fd_in, fd_out);
             }
+            close(fd);
             return 0;
         }
     }
