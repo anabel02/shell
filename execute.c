@@ -19,14 +19,8 @@ int length(char **args) {
     return i + 1;
 }
 
-
 int lsh_launch(char **args, int fd_in, int fd_out) {
-    for (int i = 0; i < lsh_num_builtins(); i++) {
-        if (strcmp(args[0], builtin_str[i]) == 0) {
-            (*builtin_func[i])(args);
-        }
-    }
-
+    lsh_print_args(args);
     pid_t pid;
     int status = 0;
 
@@ -43,7 +37,7 @@ int lsh_launch(char **args, int fd_in, int fd_out) {
         }
 
         if (execvp(args[0], args) == -1) {
-            perror("lsh");
+            perror("lsh execute");
         }
         exit(EXIT_FAILURE);
     } else if (pid < 0) {
@@ -65,14 +59,15 @@ int lsh_launch(char **args, int fd_in, int fd_out) {
     return status;
 }
 
-
+/** Revisa si es un comando builtin y lo ejecuta, si no lo llama a la función launch
+  **/
 int lsh_execute_simple(char **args, int fd_in, int fd_out, int start, int end)
 {
     char *new_args[end - start + 1];
     for (int i = start; i < end; ++i) {
         new_args[i - start] = args[i];
     }
-    new_args[end] = NULL;
+    new_args[end-start] = NULL;
 
     if (new_args[0] == NULL) {
         // An empty command was entered.
@@ -96,26 +91,17 @@ int execute_redirections(char **args, int fd_in, int fd_out, int start, int end)
 
     int changes = 0;
 
-    for (int i = 0; args[i] != NULL; ++i) {
+    for (int i = start; args[i] != NULL && i < end; ++i) {
         if (strcmp(args[i], "|") == 0) {
             changes ++;
             int fd[2];
             pipe(fd);
-            int pid = fork();
-            if (pid < 0) {
-                perror("lsh");
-            } else if (pid == 0) {
-                close(fd[0]);
-                lsh_execute_simple(args, fd_in, fd[1], start, i);
-                close(fd[1]);
-            } else {
-                close(fd[1]);
-                wait(NULL);
-                if(i + 1 < length(args) - 1) {
-                    execute_redirections(args, fd[0], fd_out, i + 1, end);
-                }
-                close(fd[0]);
+            lsh_execute_simple(args, fd_in, fd[1], start, i);
+            if(i + 1 < length(args) - 1) {
+                execute_redirections(args, fd[0], fd_out, i + 1, end);
             }
+            close(fd[0]);
+            close(fd[1]);
             return 0;
         } else if (strcmp(args[i], ">") == 0) {
             changes++;
@@ -157,10 +143,7 @@ int execute_redirections(char **args, int fd_in, int fd_out, int start, int end)
             return 0;
         }
     }
-    if (changes == 0) {
-        return lsh_execute_simple(args, fd_in, fd_out, start, end);
-    }
-    return 0;
+    return changes == 0 ? lsh_execute_simple(args, fd_in, fd_out, start, end) : 0;
 }
 
 

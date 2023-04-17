@@ -9,5 +9,4 @@
 
 #include "builtin.h"
 
-int lsh_launch(char **args, int fd_in, int fd_out);
 int lsh_execute(char **args);
