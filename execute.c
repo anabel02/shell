@@ -74,9 +74,9 @@ int lsh_execute_simple(char **args, int fd_in, int fd_out, int start, int end)
     }
     new_args[end] = NULL;
 
-    if (args[0] == NULL) {
+    if (new_args[0] == NULL) {
         // An empty command was entered.
-        return 1;
+        return 0;
     }
 
     for (int i = 0; i < lsh_num_builtins(); i++) {
@@ -91,7 +91,7 @@ int lsh_execute_simple(char **args, int fd_in, int fd_out, int start, int end)
 
 int execute_redirections(char **args, int fd_in, int fd_out, int start, int end) {
     if (args[0] == NULL) {
-        perror("El pipe no debe estar vacío");
+        return 0;
     }
 
     int changes = 0;
@@ -118,6 +118,7 @@ int execute_redirections(char **args, int fd_in, int fd_out, int start, int end)
             }
             return 0;
         } else if (strcmp(args[i], ">") == 0) {
+            changes++;
             int fd = open(args[i + 1], O_WRONLY | O_CREAT | O_TRUNC, 0644);
             if (fd == -1) {
                 perror("lsh");
@@ -130,6 +131,7 @@ int execute_redirections(char **args, int fd_in, int fd_out, int start, int end)
             close(fd);
             return 0;
         } else if (strcmp(args[i], ">>") == 0) {
+            changes++;
             int fd = open(args[i + 1], O_WRONLY | O_CREAT | O_APPEND, 0644);
             if (fd == -1) {
                 perror("lsh");
@@ -141,10 +143,22 @@ int execute_redirections(char **args, int fd_in, int fd_out, int start, int end)
             }
             close(fd);
             return 0;
+        } else if (strcmp(args[i], "<") == 0) {
+            changes++;
+            int fd = open(args[i + 1], O_RDONLY);
+            if (fd == -1) {
+                perror("lsh");
+                return 1;
+            }
+            lsh_execute_simple(args, fd, fd_out, start, i);
+            if(i + 2 < length(args) - 1) {
+                execute_redirections(args, fd_in, fd_out, i + 2, end);
+            }
+            return 0;
         }
     }
     if (changes == 0) {
-        return lsh_launch(args, fd_in, fd_out);
+        return lsh_execute_simple(args, fd_in, fd_out, start, end);
     }
     return 0;
 }
