@@ -13,6 +13,13 @@ void lsh_print_args(char** args) {
 }
 
 
+int length(char **args) {
+    int i;
+    for (i = 0; args[i]!= NULL; ++i) {}
+    return i + 1;
+}
+
+
 int lsh_launch(char **args, int fd_in, int fd_out) {
     for (int i = 0; i < lsh_num_builtins(); i++) {
         if (strcmp(args[0], builtin_str[i]) == 0) {
@@ -59,25 +66,90 @@ int lsh_launch(char **args, int fd_in, int fd_out) {
 }
 
 
-int lsh_execute_simple(char **args, int fd_in, int fd_out)
+int lsh_execute_simple(char **args, int fd_in, int fd_out, int start, int end)
 {
-    int i;
+    char *new_args[end - start + 1];
+    for (int i = start; i < end; ++i) {
+        new_args[i - start] = args[i];
+    }
+    new_args[end] = NULL;
 
     if (args[0] == NULL) {
         // An empty command was entered.
         return 1;
     }
 
-    for (i = 0; i < lsh_num_builtins(); i++) {
+    for (int i = 0; i < lsh_num_builtins(); i++) {
         if (strcmp(args[0], builtin_str[i]) == 0) {
-            return (*builtin_func[i])(args);
+            return (*builtin_func[i])(new_args);
         }
     }
 
-    return lsh_launch(args, fd_in, fd_out);
+    return lsh_launch(new_args, fd_in, fd_out);
+}
+
+
+int execute_redirections(char **args, int fd_in, int fd_out, int start, int end) {
+    if (args[0] == NULL) {
+        perror("El pipe no debe estar vacío");
+    }
+
+    int changes = 0;
+
+    for (int i = 0; args[i] != NULL; ++i) {
+        if (strcmp(args[i], "|") == 0) {
+            changes ++;
+            int fd[2];
+            pipe(fd);
+            int pid = fork();
+            if (pid < 0) {
+                perror("lsh");
+            } else if (pid == 0) {
+                close(fd[0]);
+                lsh_execute_simple(args, fd_in, fd[1], start, i);
+                close(fd[1]);
+            } else {
+                close(fd[1]);
+                wait(NULL);
+                if(i + 1 < length(args) - 1) {
+                    execute_redirections(args, fd[0], fd_out, i + 1, end);
+                }
+                close(fd[0]);
+            }
+            return 0;
+        } else if (strcmp(args[i], ">") == 0) {
+            int fd = open(args[i + 1], O_WRONLY | O_CREAT | O_TRUNC, 0644);
+            if (fd == -1) {
+                perror("lsh");
+                return 1;
+            }
+            lsh_execute_simple(args, fd_in, fd, start, i);
+            if(i + 2 < length(args) - 1) {
+                execute_redirections(args, fd_in, fd_out, i + 2, end);
+            }
+            close(fd);
+            return 0;
+        } else if (strcmp(args[i], ">>") == 0) {
+            int fd = open(args[i + 1], O_WRONLY | O_CREAT | O_APPEND, 0644);
+            if (fd == -1) {
+                perror("lsh");
+                return 1;
+            }
+            lsh_execute_simple(args, fd_in, fd, start, i);
+            if(i + 2 < length(args) - 1) {
+                execute_redirections(args, fd_in, fd_out, i + 2, end);
+            }
+            close(fd);
+            return 0;
+        }
+    }
+    if (changes == 0) {
+        return lsh_launch(args, fd_in, fd_out);
+    }
+    return 0;
 }
 
 
 int lsh_execute(char** args) {
-    return lsh_execute_simple(args, -1, -1);
+    return execute_redirections(args, -1, -1, 0, length(args));
 }
