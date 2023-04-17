@@ -14,5 +14,5 @@ int lsh_help(char **args);
 int lsh_exit(char **args);
 int lsh_num_builtins();
 
-int lsh_launch(char **args);
-int lsh_execute(char **args);
+extern char *builtin_str[];
+extern int (*builtin_func[]) (char **);

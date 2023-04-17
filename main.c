@@ -2,27 +2,31 @@
 
 #include "builtin.h"
 #include "utils.h"
+#include "execute.h"
 
 #define BOLD_CYAN "\033[1;36m"
 
 void lsh_loop()
 {
     char *line;
+    char *cline;
     char **args;
     int status;
 
     do {
         print_prompt();
         line = lsh_read_line();
-        args = lsh_split_line(line);
+        cline = clean_line(line);
+        args = lsh_split_line(cline);
         status = lsh_execute(args);
 
         free(line);
+        free(cline);
         free(args);
     } while (status >= 0);
 }
 
-int main(int argc, char **argv)
+int main()
 {
     lsh_loop();
 
