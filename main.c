@@ -4,8 +4,6 @@
 #include "utils.h"
 #include "execute.h"
 
-#define BOLD_CYAN "\033[1;36m"
-
 void lsh_loop()
 {
     char *line;

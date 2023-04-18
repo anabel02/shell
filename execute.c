@@ -70,7 +70,6 @@ int execute_redirections(char **args, int fd_in, int fd_out) {
     }
 
     int changes = 0;
-
     for (int i = 0; args[i] != NULL; ++i) {
         if (strcmp(args[i], "|") == 0) {
             args[i] = NULL;
@@ -167,6 +166,58 @@ int execute_chain(char **args, int fd_in, int fd_out) {
 }
 
 
+int execute_conditionals(char **args, int fd_in, int fd_out) {
+    int if_pos = -1;
+    int then_pos = -1;
+    int else_pos = -1;
+    int end_pos = -1;
+    for (int i = 0; args[i] != NULL; ++i) {
+        if (strcmp(args[i], "if") != 0) continue;
+        if_pos = i;
+        args[i] = NULL;
+        int conditionals = 1;
+        for (int j = i + 1; args[j] != NULL; ++j) {
+            if (strcmp(args[j], "if") == 0) {
+                conditionals++;
+            }
+            if (strcmp(args[j], "end") == 0) {
+                conditionals--;
+                if (conditionals != 0) continue;
+                end_pos = j;
+                args[j] = NULL;
+                break;
+            }
+            if (conditionals != 1) continue;
+            if (strcmp(args[j], "then") == 0) {
+                then_pos = j;
+                args[j] = NULL;
+            }else if (strcmp(args[j], "else") == 0) {
+                else_pos = j;
+                args[j] = NULL;
+            }
+        }
+        break;
+    }
+
+    if (if_pos != -1 && end_pos == -1) {
+        perror("lsh : more ifs than ends");
+    }
+
+    if (if_pos == -1 && end_pos == -1) {
+        return execute_chain(args, fd_in, fd_out);
+    }
+
+    if (then_pos != -1) {
+        if(lsh_execute(args + if_pos + 1) == 0) {
+            return lsh_execute(args + then_pos + 1);
+        } else if(else_pos != -1) {
+            return lsh_execute(args + else_pos + 1);
+        }
+    }
+    return 0;
+}
+
+
 int lsh_execute(char** args) {
-    return execute_chain(args, -1, -1);
+    return execute_conditionals(args, -1, -1);
 }
