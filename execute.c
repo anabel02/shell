@@ -12,6 +12,7 @@ void lsh_print_args(char** args) {
     printf("\n");
 }
 
+
 int lsh_launch(char **args, int fd_in, int fd_out) {
     pid_t pid;
     int status = 0;
@@ -63,6 +64,7 @@ int lsh_execute_simple(char **args, int fd_in, int fd_out)
     return lsh_launch(args, fd_in, fd_out);
 }
 
+int execute_conditionals(char **args, int fd_in, int fd_out);
 
 int execute_redirections(char **args, int fd_in, int fd_out) {
     if (args[0] == NULL) {
@@ -135,8 +137,24 @@ int execute_chain(char **args, int fd_in, int fd_out) {
     if (args[0] == NULL) {
         return 0;
     }
+
     int changes = 0;
+    int open_conditionals = 0;
+    int cond = 0;
+
     for (int i = 0; args[i] != NULL; ++i) {
+        if (strcmp(args[i], "if") == 0) {
+            open_conditionals++;
+            cond++;
+        }
+        if (strcmp(args[i], "end") == 0) {
+            open_conditionals++;
+        }
+        if (open_conditionals > 0) continue;
+        if (open_conditionals < 0) {
+            perror("lsh: end without if");
+            return 1;
+        }
         if (strcmp(args[i], ";") == 0) {
             args[i] = NULL;
             changes++;
@@ -160,7 +178,7 @@ int execute_chain(char **args, int fd_in, int fd_out) {
         }
     }
     if (changes == 0) {
-        return execute_redirections(args, fd_in, fd_out);
+        return cond == 0 ? execute_redirections(args, fd_in, fd_out) : execute_conditionals(args, fd_in, fd_out);
     }
     return 0;
 }
