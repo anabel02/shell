@@ -8,14 +8,18 @@
 char *builtin_str[] = {
         "cd",
         "help",
-        "exit"
+        "exit",
+        "true",
+        "false"
 };
 
 
 int (*builtin_func[]) (char **) = {
         &lsh_cd,
         &lsh_help,
-        &lsh_exit
+        &lsh_exit,
+        &lsh_true,
+        &lsh_false
 };
 
 
@@ -48,4 +52,14 @@ int lsh_help(char **args) {
 
 int lsh_exit(char **args) {
     exit(EXIT_SUCCESS);
+}
+
+
+int lsh_true(char **args) {
+    return 0;
+}
+
+
+int lsh_false(char **args) {
+    return 1;
 }
