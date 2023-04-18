@@ -209,7 +209,7 @@ int execute_conditionals(char **args, int fd_in, int fd_out) {
             if (strcmp(args[j], "then") == 0) {
                 then_pos = j;
                 args[j] = NULL;
-            }else if (strcmp(args[j], "else") == 0) {
+            } else if (strcmp(args[j], "else") == 0) {
                 else_pos = j;
                 args[j] = NULL;
             }
@@ -218,7 +218,8 @@ int execute_conditionals(char **args, int fd_in, int fd_out) {
     }
 
     if (if_pos != -1 && end_pos == -1) {
-        perror("lsh : more ifs than ends");
+        perror("lsh : if without end");
+        return 1;
     }
 
     if (if_pos == -1 && end_pos == -1) {
@@ -237,5 +238,5 @@ int execute_conditionals(char **args, int fd_in, int fd_out) {
 
 
 int lsh_execute(char** args) {
-    return execute_conditionals(args, -1, -1);
+    return execute_chain(args, -1, -1);
 }
