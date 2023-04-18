@@ -5,6 +5,9 @@
 #include <fcntl.h>
 #include "execute.h"
 
+/* if ls ; if ls ; ls then ls end ls then ls else cd .. end */
+
+
 void lsh_print_args(char** args) {
     for (int i = 0; args[i] != NULL; ++i) {
         printf("%s ", args[i]);
@@ -63,8 +66,6 @@ int lsh_execute_simple(char **args, int fd_in, int fd_out)
     }
     return lsh_launch(args, fd_in, fd_out);
 }
-
-int execute_conditionals(char **args, int fd_in, int fd_out);
 
 int execute_redirections(char **args, int fd_in, int fd_out) {
     if (args[0] == NULL) {
@@ -132,6 +133,7 @@ int execute_redirections(char **args, int fd_in, int fd_out) {
     return changes == 0 ? lsh_execute_simple(args, fd_in, fd_out) : 0;
 }
 
+int conditional(char **args, int fd_in, int fd_out);
 
 int execute_chain(char **args, int fd_in, int fd_out) {
     if (args[0] == NULL) {
@@ -144,17 +146,25 @@ int execute_chain(char **args, int fd_in, int fd_out) {
 
     for (int i = 0; args[i] != NULL; ++i) {
         if (strcmp(args[i], "if") == 0) {
-            open_conditionals++;
-            cond++;
+            changes++;
+            if (i != 0) {
+                printf("lsh: error parsing, must be a chain character before if block\n");
+                return 1;
+            }
+            int end_pos = conditional(args + i, fd_in, fd_out);
+            if (end_pos == -1) {
+                perror("lsh : if without end");
+                return 1;
+            } else {
+                i = end_pos;
+                if (args[i+1] == NULL || strcmp(args[i + 1], ";") == 0 || strcmp(args[i + 1], "&&") == 0 || strcmp(args[i + 1], "||") == 0 ) {
+                    continue;
+                }
+                printf("lsh: error parsing, must be a chain character after if block\n");
+                return 1;
+            }
         }
-        if (strcmp(args[i], "end") == 0) {
-            open_conditionals++;
-        }
-        if (open_conditionals > 0) continue;
-        if (open_conditionals < 0) {
-            perror("lsh: end without if");
-            return 1;
-        }
+
         if (strcmp(args[i], ";") == 0) {
             args[i] = NULL;
             changes++;
@@ -177,65 +187,53 @@ int execute_chain(char **args, int fd_in, int fd_out) {
             return 0;
         }
     }
-    if (changes == 0) {
-        return cond == 0 ? execute_redirections(args, fd_in, fd_out) : execute_conditionals(args, fd_in, fd_out);
-    }
-    return 0;
+    return changes == 0 ? execute_redirections(args, fd_in, fd_out) : 0;
 }
 
+int conditional(char **args, int fd_in, int fd_out) {
 
-int execute_conditionals(char **args, int fd_in, int fd_out) {
-    int if_pos = -1;
+    if (strcmp(args[0], "if") != 0) {
+        return -1;
+    }
+
+    int if_pos = 0;
+    args[0] = NULL;
     int then_pos = -1;
     int else_pos = -1;
     int end_pos = -1;
-    for (int i = 0; args[i] != NULL; ++i) {
-        if (strcmp(args[i], "if") != 0) continue;
-        if_pos = i;
-        args[i] = NULL;
-        int conditionals = 1;
-        for (int j = i + 1; args[j] != NULL; ++j) {
-            if (strcmp(args[j], "if") == 0) {
-                conditionals++;
-            }
-            if (strcmp(args[j], "end") == 0) {
-                conditionals--;
-                if (conditionals != 0) continue;
-                end_pos = j;
-                args[j] = NULL;
-                break;
-            }
-            if (conditionals != 1) continue;
-            if (strcmp(args[j], "then") == 0) {
-                then_pos = j;
-                args[j] = NULL;
-            } else if (strcmp(args[j], "else") == 0) {
-                else_pos = j;
-                args[j] = NULL;
-            }
+
+    int conditionals = 1;
+    for (int j = 1; args[j] != NULL; ++j) {
+        if (strcmp(args[j], "if") == 0) {
+            conditionals++;
         }
-        break;
-    }
-
-    if (if_pos != -1 && end_pos == -1) {
-        perror("lsh : if without end");
-        return 1;
-    }
-
-    if (if_pos == -1 && end_pos == -1) {
-        return execute_chain(args, fd_in, fd_out);
-    }
-
-    if (then_pos != -1) {
-        if(lsh_execute(args + if_pos + 1) == 0) {
-            return lsh_execute(args + then_pos + 1);
-        } else if(else_pos != -1) {
-            return lsh_execute(args + else_pos + 1);
+        if (strcmp(args[j], "end") == 0) {
+            conditionals--;
+            if (conditionals != 0) continue;
+            end_pos = j;
+            args[j] = NULL;
+            break;
+        }
+        if (conditionals != 1) continue;
+        if (strcmp(args[j], "then") == 0) {
+            then_pos = j;
+            args[j] = NULL;
+        } else if (strcmp(args[j], "else") == 0) {
+            else_pos = j;
+            args[j] = NULL;
         }
     }
-    return 0;
+
+    if (then_pos != -1 && end_pos != -1) {
+        if (execute_chain(args + if_pos + 1, fd_in, fd_out) == 0) {
+            execute_chain(args + then_pos + 1, fd_in, fd_out);
+        } else if (else_pos != -1) {
+            execute_chain(args + else_pos + 1, fd_in, fd_out);
+        }
+    }
+
+    return end_pos;
 }
-
 
 int lsh_execute(char** args) {
     return execute_chain(args, -1, -1);
