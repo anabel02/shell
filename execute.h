@@ -7,6 +7,7 @@
 
 #endif //SHELL_EXECUTE_H
 
+#include <fcntl.h>
 #include "builtin.h"
 
 int lsh_execute(char **args);

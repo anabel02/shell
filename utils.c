@@ -171,6 +171,6 @@ void print_prompt() {
         capacity *= 2;
         cwd = realloc(cwd, capacity);
    }
-    printf("%s%s@%s%s:%s%s$ ",BOLD_CYAN, pwd->pw_name, BOLD_CYAN, hostname, BOLD_CYAN, cwd);
+    printf("%s%s@%s:%s $ ", BOLD_CYAN, pwd->pw_name, hostname, cwd);
     free(cwd);
 }

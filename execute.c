@@ -2,7 +2,6 @@
 // Created by anabel on 4/16/2023.
 //
 
-#include <fcntl.h>
 #include "execute.h"
 
 /*revisar los return 0, del ; y de las redirecciones
@@ -220,6 +219,5 @@ int execute_conditional(char **args) {
 
 
 int lsh_execute(char** args) {
-    lsh_print_args(args);
     return execute_chain(args, -1, -1);
 }
