@@ -8,6 +8,9 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+#include "list.h"
+
+List* bg_pid_list;
 
 int lsh_cd(char **args);
 int lsh_help(char **args);

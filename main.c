@@ -24,6 +24,8 @@ void lsh_loop() {
 }
 
 int main() {
+    bg_pid_list = new_list();
+
     lsh_loop();
 
     exit(EXIT_SUCCESS);

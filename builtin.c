@@ -30,18 +30,16 @@ int lsh_num_builtins() {
 
 int lsh_cd(char **args) {
     if (args[1] == NULL) {
-        char *env = getenv("HOME");
-        if (chdir(env) != 0) {
-            perror("lsh : cd fhynj");
-        }
+        if (chdir(getenv("HOME")) == 0) return 0;
+        perror("lsh: cd: ");
+
     } else if (args[2] != NULL){
         fprintf(stderr, "lsh: cd: too many arguments\n");
     } else {
-            if (chdir(args[1]) != 0) {
-                perror("lsh : cd");
-            }
+        if (chdir(args[1]) == 0) return 0;
+        perror("lsh : cd");
     }
-    return 0;
+    return 1;
 }
 
 
@@ -67,4 +65,15 @@ int lsh_true(char **args) {
 
 int lsh_false(char **args) {
     return 1;
+}
+
+
+int jobs(char **args) {
+    if (args[1] != NULL) {
+        fprintf(stderr, "lsh: jobs: too many arguments\n");
+        return 1;
+    } else {
+
+    }
+    return 0;
 }

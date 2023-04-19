@@ -185,7 +185,7 @@ int execute_chain(char **args, int fd_in, int fd_out) {
             return 0;
         }
     }
-    return  execute_redirections_out(args, fd_in, fd_out);
+    return execute_redirections_out(args, fd_in, fd_out);
 }
 
 
