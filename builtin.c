@@ -10,7 +10,8 @@ char *builtin_str[] = {
         "help",
         "exit",
         "true",
-        "false"
+        "false",
+        "jobs"
 };
 
 
@@ -19,7 +20,8 @@ int (*builtin_func[]) (char **) = {
         &lsh_help,
         &lsh_exit,
         &lsh_true,
-        &lsh_false
+        &lsh_false,
+        &jobs
 };
 
 
@@ -73,7 +75,25 @@ int jobs(char **args) {
         fprintf(stderr, "lsh: jobs: too many arguments\n");
         return 1;
     } else {
-
+        for (int i = 0; i < bg_pid_list->len; ++i) {
+            printf("[%d] %d\n", i + 1, get(bg_pid_list, i));
+        }
     }
     return 0;
+}
+
+void update_background() {
+    int status;
+
+    if (bg_pid_list->len > 0) {
+        for (int i = 0; i < bg_pid_list->len; ++i) {
+            waitpid(bg_pid_list->array[i], &status, WNOHANG);
+            if (WIFEXITED(status)) {
+                printf("[%d]\tDone\t%d\n", i + 1, bg_pid_list->array[i]);
+                remove_at(bg_pid_list, i);
+
+                i = -1;
+            }
+        }
+    }
 }

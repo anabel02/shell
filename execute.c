@@ -16,6 +16,13 @@ void print_args(char** args) {
 }
 
 
+int len(char **array) {
+    int i;
+    for (i = 0; array[i] != NULL; ++i) {}
+    return i;
+}
+
+
 int lsh_launch(char **args, int fd_in, int fd_out) {
     pid_t pid;
     int status = 0;
@@ -185,6 +192,25 @@ int execute_chain(char **args, int fd_in, int fd_out) {
             return 0;
         }
     }
+
+    if (strcmp(args[len(args) - 1], "&") == 0) {
+        args[len(args) - 1] = NULL;
+        pid_t pid = fork();
+
+        if (pid < 0) {
+            perror("lsh");
+        } else if (pid == 0) {
+            setpgid(0, 0);
+            execute_redirections_out(args, fd_in, fd_out);
+            exit(EXIT_FAILURE);
+        } else {
+            setpgid(pid, pid);
+            append(bg_pid_list, pid);
+            printf("[%d]\t%d\n",bg_pid_list->len,pid);
+            return 0;
+        }
+    }
+
     return execute_redirections_out(args, fd_in, fd_out);
 }
 
