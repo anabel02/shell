@@ -10,4 +10,4 @@
 #include "builtin.h"
 
 int lsh_execute(char **args);
-int execute_conditional(char **args, int fd_in, int fd_out);
+int execute_conditional(char **args);
