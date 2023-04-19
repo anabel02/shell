@@ -20,6 +20,8 @@ typedef int bool_t;
 /* REVISAR MENSAJES DE ERROR
  *(base) anabelbg@LAPTOP-8190EOER:/mnt/c/Users/anabe/CLionProjects/shell/cmake-build-debug$ ~
 -bash: /home/anabelbg: Is a directory
+ teamaño de linea limpia
+ errores de sintaxis
  * */
 
 char specialChars[] = {'|', '<', '>', ';', '&', '\"'};
@@ -58,7 +60,13 @@ char *lsh_read_line(void) {
 
 
 char *clean_line(char *line) {
-    char *clean_line = malloc(strlen(line) * 4);
+    int home_dir = 0;
+    for (int i = 0; line[i] != 0; ++i) {
+        if(line[i] != '~') continue;
+        home_dir++;
+    }
+    
+    char *clean_line = malloc(strlen(line) * 3 + home_dir * strlen(getenv("HOME")));
     size_t pos = 0;
     int quotes = 0;
 
@@ -185,6 +193,8 @@ void print_prompt() {
     }
     char env[] = "~";
     printf("%s%s@%s:%s $ ", BOLD_CYAN, pwd->pw_name, hostname,
-           strncmp(cwd, getenv("HOME"), strlen(getenv("HOME"))) == 0 ? strcat(env, cwd + strlen(getenv("HOME"))) : cwd);
+           strncmp(cwd, getenv("HOME"), strlen(getenv("HOME"))) == 0 ?
+           strcat(env, cwd + strlen(getenv("HOME"))) :
+           cwd);
     free(cwd);
 }
