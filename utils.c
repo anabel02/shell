@@ -17,9 +17,13 @@ typedef int bool_t;
 #define TRUE 1
 #define FALSE 0
 
-/* REVISAR MENSAJES DE ERROR*/
+/* REVISAR MENSAJES DE ERROR
+ *(base) anabelbg@LAPTOP-8190EOER:/mnt/c/Users/anabe/CLionProjects/shell/cmake-build-debug$ ~
+-bash: /home/anabelbg: Is a directory
+ * */
 
 char specialChars[] = {'|', '<', '>', ';', '&', '\"'};
+
 
 bool_t is_special_char(char c) {
     for (int i = 0; i < strlen(specialChars); ++i) {
@@ -29,6 +33,7 @@ bool_t is_special_char(char c) {
     }
     return FALSE;
 }
+
 
 char *lsh_read_line(void) {
     size_t size = 64;
@@ -51,10 +56,10 @@ char *lsh_read_line(void) {
     return line;
 }
 
+
 char *clean_line(char *line) {
-    size_t size = strlen(line);
-    char *clean_line = malloc(size * 2);
-    int pos = 0;
+    char *clean_line = malloc(strlen(line) * 4);
+    size_t pos = 0;
     int quotes = 0;
 
     if (!clean_line) {
@@ -76,6 +81,13 @@ char *clean_line(char *line) {
         }
         if (quotes % 2 == 1) {
             clean_line[pos++] = line[i];
+            continue;
+        }
+        if (line[i] == '~') {
+            char *env = getenv("HOME");
+            for (int j = 0; j < strlen(env); ++j) {
+                clean_line[pos++] = env[j];
+            }
             continue;
         }
         if (line[i] == '#') {
@@ -109,6 +121,7 @@ char *clean_line(char *line) {
     clean_line[pos] = '\0';
     return clean_line;
 }
+
 
 char **lsh_split_line(char *line) {
     char token_delim[] = " \t\r\n\a";
@@ -157,6 +170,7 @@ char **lsh_split_line(char *line) {
     return tokens;
 }
 
+
 void print_prompt() {
     struct passwd* pwd = getpwuid(getuid());
 
@@ -164,13 +178,13 @@ void print_prompt() {
     gethostname(hostname, HOST_NAME_MAX);
 
     int capacity = 64;
-
     char *cwd = malloc(capacity * sizeof(char));
-
     while (getcwd(cwd, capacity) == NULL) {
         capacity *= 2;
         cwd = realloc(cwd, capacity);
-   }
-    printf("%s%s@%s:%s $ ", BOLD_CYAN, pwd->pw_name, hostname, cwd);
+    }
+    char env[] = "~";
+    printf("%s%s@%s:%s $ ", BOLD_CYAN, pwd->pw_name, hostname,
+           strncmp(cwd, getenv("HOME"), strlen(getenv("HOME"))) == 0 ? strcat(env, cwd + strlen(getenv("HOME"))) : cwd);
     free(cwd);
 }

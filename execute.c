@@ -6,9 +6,7 @@
 
 /*revisar los return 0, del ; y de las redirecciones
  * if ls then ls | grep end > file
- * ls cd ..
- * cd .. ls
- * cat < ana >> omarecho "anabel te ama mucho"  > ana && ls  ejecuta el ls*/
+ * cd .. ls*/
 
 void print_args(char** args) {
     for (int i = 0; args[i] != NULL; ++i) {
@@ -38,7 +36,7 @@ int lsh_launch(char **args, int fd_in, int fd_out) {
         }
 
         if (execvp(args[0], args) == -1) {
-            perror("lsh execute");
+            perror("lsh");
         }
         exit(EXIT_FAILURE);
     } else {
@@ -221,7 +219,7 @@ int execute_conditional(char **args) {
     }
 
     if(args[end_pos + 1] != NULL) {
-        printf("después del end debe aparecer algun separador ;  && ||\n");
+        printf("lsh: después del end debe aparecer algun separador ;  && ||\n");
     }
 
     if (then_pos != -1 && end_pos != -1) {

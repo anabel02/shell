@@ -30,11 +30,16 @@ int lsh_num_builtins() {
 
 int lsh_cd(char **args) {
     if (args[1] == NULL) {
-        fprintf(stderr, "lsh: expected argument to \"cd\"\n");
-    } else {
-        if (chdir(args[1]) != 0) {
-            perror("lsh : cd");
+        char *env = getenv("HOME");
+        if (chdir(env) != 0) {
+            perror("lsh : cd fhynj");
         }
+    } else if (args[2] != NULL){
+        fprintf(stderr, "lsh: cd: too many arguments\n");
+    } else {
+            if (chdir(args[1]) != 0) {
+                perror("lsh : cd");
+            }
     }
     return 0;
 }
