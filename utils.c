@@ -65,10 +65,10 @@ char *clean_line(char *line) {
     for (int i = 0; i < strlen(line); ++i) {
         if(line[i] == '\"') {
             quotes++;
-            if (quotes % 2 == 1 && i > 0 && line[i-1] != ' ') {
+            if (quotes % 2 == 1 && pos > 0 && clean_line[pos - 1] != ' ') {
                 clean_line[pos++] = ' ';
             }
-            clean_line[pos++] = line[i];
+            clean_line[pos++] = '\"';
             if (quotes % 2 == 0) {
                 clean_line[pos++] = ' ';
             }
@@ -80,88 +80,35 @@ char *clean_line(char *line) {
         }
         if (line[i] == '#') {
             break;
-        } else if (line[i] == ' ') {
+        }
+        if (line[i] == ' ') {
             if (pos == 0 || clean_line[pos - 1] == ' ') {
                 continue;
             }
             clean_line[pos++] = ' ';
-        } else if (is_special_char(line[i]) == FALSE) {
+        }
+        if (is_special_char(line[i]) == TRUE){
+            if (i > 0 && line[i - 1] == line[i]) {
+                continue;
+            }
+            if (clean_line[pos - 1] == ' ') {
+                clean_line[pos++] = line[i];
+            } else {
+                clean_line[pos++] = ' ';
+                clean_line[pos++] = line[i];
+            }
+            if (line[i + 1] == line[i]) {
+                clean_line[pos++] = line[i];
+            }
+            clean_line[pos++] = ' ';
+        } else {
             clean_line[pos++] = line[i];
-            continue;
-        } else if (line[i] == '<') {
-            if (i > 0 && line[i-1] == '<') {
-                continue;
-            }
-            if (line[i-1] == ' ') {
-                clean_line[pos++] = line[i];
-            } else {
-                clean_line[pos++] = ' ';
-                clean_line[pos++] = line[i];
-            }
-            if (line[i+1] == '<') {
-                clean_line[pos++] = line[i+1];
-            }
-            clean_line[pos++] = ' ';
-        } else if (line[i] == '>') {
-            if (i > 0 && line[i-1] == '>') {
-                continue;
-            }
-            if (line[i-1] == ' ') {
-                clean_line[pos++] = line[i];
-            } else {
-                clean_line[pos++] = ' ';
-                clean_line[pos++] = line[i];
-            }
-            if (line[i+1] == '>') {
-                clean_line[pos++] = line[i+1];
-            }
-            clean_line[pos++] = ' ';
-            continue;
-        }  else if (line[i] == '|') {
-            if (i > 0 && line[i - 1] == '|') {
-                continue;
-            }
-            if (line[i - 1] == ' ') {
-                clean_line[pos++] = line[i];
-            } else {
-                clean_line[pos++] = ' ';
-                clean_line[pos++] = line[i];
-            }
-            if (line[i + 1] == '|') {
-                clean_line[pos++] = line[i + 1];
-            }
-            clean_line[pos++] = ' ';
-            continue;
-        } else if (line[i] == '&') {
-            if (i > 0 && line[i - 1] == '&') {
-                continue;
-            }
-            if (line[i - 1] == ' ') {
-                clean_line[pos++] = line[i];
-            } else {
-                clean_line[pos++] = ' ';
-                clean_line[pos++] = line[i];
-            }
-            if (line[i + 1] == '&') {
-                clean_line[pos++] = line[i + 1];
-            }
-            clean_line[pos++] = ' ';
-            continue;
-        } else if (line[i] == ';') {
-            if (line[i - 1] == ' ') {
-                clean_line[pos++] = line[i];
-            } else {
-                clean_line[pos++] = ' ';
-                clean_line[pos++] = line[i];
-            }
-            clean_line[pos++] = ' ';
             continue;
         }
     }
     clean_line[pos] = '\0';
     return clean_line;
 }
-
 
 char **lsh_split_line(char *line) {
     char token_delim[] = " \t\r\n\a";
@@ -178,7 +125,6 @@ char **lsh_split_line(char *line) {
     token = strtok(line, token_delim);
 
     while (token != NULL) {
-        tokens[pos++] = token;
         if (pos >= buf_size) {
             buf_size *= 2;
             tokens = realloc(tokens, buf_size * sizeof(char*));
@@ -187,6 +133,24 @@ char **lsh_split_line(char *line) {
                 exit(EXIT_FAILURE);
             }
         }
+        if (token[0] == '\"'){
+            if (token[strlen(token) - 1] == '\"' && strlen(token) > 1){
+                token += 1;
+                token[strlen(token) - 1] = 0;
+            } else {
+                char *quote_token = (char *) malloc(strlen(token) * sizeof(char) + 1);
+                strcpy(quote_token, token);
+                token = strtok(NULL, "\"");
+                quote_token = realloc(quote_token, (strlen(quote_token) + strlen(token) + 1) * sizeof(char));
+                quote_token = strcat(quote_token, " ");
+                quote_token = strcat(quote_token, token);
+                quote_token += 1;
+                tokens[pos++] = quote_token;
+                token = strtok(NULL, token_delim);
+                continue;
+            }
+        }
+        tokens[pos++] = token;
         token = strtok(NULL, token_delim);
     }
     tokens[pos] = NULL;

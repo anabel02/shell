@@ -238,5 +238,6 @@ int execute_conditional(char **args, int fd_in, int fd_out) {
 
 
 int lsh_execute(char** args) {
+    lsh_print_args(args);
     return execute_chain(args, -1, -1);
 }
