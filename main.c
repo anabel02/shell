@@ -4,8 +4,7 @@
 #include "utils.h"
 #include "execute.h"
 
-void lsh_loop()
-{
+void lsh_loop() {
     char *line;
     char *cline;
     char **args;
@@ -24,8 +23,7 @@ void lsh_loop()
     } while (status >= 0);
 }
 
-int main()
-{
+int main() {
     lsh_loop();
 
     exit(EXIT_SUCCESS);

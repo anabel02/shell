@@ -7,7 +7,8 @@
 /*revisar los return 0, del ; y de las redirecciones
  * if ls then ls | grep end > file
  * ls cd ..
- * cd .. ls*/
+ * cd .. ls
+ * cat < ana >> omarecho "anabel te ama mucho"  > ana && ls  ejecuta el ls*/
 
 void print_args(char** args) {
     for (int i = 0; args[i] != NULL; ++i) {
@@ -60,6 +61,10 @@ int lsh_launch(char **args, int fd_in, int fd_out) {
 
 int lsh_execute_simple(char **args, int fd_in, int fd_out)
 {
+    if (args[0] == NULL) {
+        return 0;
+    }
+
     for (int i = 0; i < lsh_num_builtins(); i++) {
         if (strcmp(args[0], builtin_str[i]) == 0) {
             return (*builtin_func[i])(args);
@@ -70,7 +75,31 @@ int lsh_execute_simple(char **args, int fd_in, int fd_out)
 }
 
 
-int execute_redirections(char **args, int fd_in, int fd_out) {
+int execute_redirections_in(char **args, int fd_in, int fd_out) {
+    if (args[0] == NULL) {
+        return 0;
+    }
+
+    for (int i = 0; args[i] != NULL; ++i) {
+        if (strcmp(args[i], "<") != 0) continue;
+        args[i] = NULL;
+        int fd = open(args[i + 1], O_RDONLY);
+        if (fd == -1) {
+            perror("lsh");
+            return 1;
+        }
+        int exit_status = lsh_execute_simple(args, fd, fd_out);
+        if(args[i + 2] != NULL) {
+            exit_status += lsh_execute_simple(args + i + 2, fd_in, fd_out);
+        }
+        close(fd);
+        return exit_status;
+    }
+    return lsh_execute_simple(args, fd_in, fd_out);
+}
+
+
+int execute_redirections_out(char **args, int fd_in, int fd_out) {
     if (args[0] == NULL) {
         return 0;
     }
@@ -87,13 +116,13 @@ int execute_redirections(char **args, int fd_in, int fd_out) {
                 perror("lsh");
                 return 1;
             }
-            lsh_execute_simple(args, fd_in, fd[1]);
+            int exit_status = execute_redirections_in(args, fd_in, fd[1]);
             if (args[i + 1] != NULL) {
-                execute_redirections(args + i + 1, fd[0], fd_out);
+                exit_status += execute_redirections_out(args + i + 1, fd[0], fd_out);
             }
             close(fd[0]);
             close(fd[1]);
-            return 0;
+            return exit_status;
         } else if (strcmp(args[i], ">") == 0) {
             args[i] = NULL;
             int fd = open(args[i + 1], O_WRONLY | O_CREAT | O_TRUNC, 0644);
@@ -101,12 +130,12 @@ int execute_redirections(char **args, int fd_in, int fd_out) {
                 perror("lsh");
                 return 1;
             }
-            lsh_execute_simple(args, fd_in, fd);
+            int exit_status = execute_redirections_in(args, fd_in, fd);
             if(args[i + 2] != NULL) {
-                execute_redirections(args + i + 2, fd_in, fd_out);
+                exit_status += execute_redirections_out(args + i + 2, fd_in, fd_out);
             }
             close(fd);
-            return 0;
+            return exit_status;
         } else if (strcmp(args[i], ">>") == 0) {
             args[i] = NULL;
             int fd = open(args[i + 1], O_WRONLY | O_CREAT | O_APPEND, 0644);
@@ -114,28 +143,15 @@ int execute_redirections(char **args, int fd_in, int fd_out) {
                 perror("lsh");
                 return 1;
             }
-            lsh_execute_simple(args, fd_in, fd);
+            int exit_status = execute_redirections_in(args, fd_in, fd);
             if(args[i + 2] != NULL) {
-                execute_redirections(args + i + 2, fd_in, fd_out);
+                exit_status += execute_redirections_out(args + i + 2, fd_in, fd_out);
             }
             close(fd);
-            return 0;
-        } else if (strcmp(args[i], "<") == 0) {
-            args[i] = NULL;
-            int fd = open(args[i + 1], O_RDONLY);
-            if (fd == -1) {
-                perror("lsh");
-                return 1;
-            }
-            lsh_execute_simple(args, fd, fd_out);
-            if(args[i + 2] != NULL) {
-                execute_redirections(args + i + 2, fd_in, fd_out);
-            }
-            close(fd);
-            return 0;
+            return exit_status;
         }
     }
-    return  lsh_execute_simple(args, fd_in, fd_out);
+    return execute_redirections_in(args, fd_in, fd_out);
 }
 
 
@@ -156,20 +172,22 @@ int execute_chain(char **args, int fd_in, int fd_out) {
         if (open_conditionals > 0) continue;
         if (strcmp(args[i], ";") == 0) {
             args[i] = NULL;
-            return execute_redirections(args, fd_in, fd_out) + execute_chain(args + i + 1, fd_in, fd_out);
+            return execute_redirections_out(args, fd_in, fd_out) + execute_chain(args + i + 1, fd_in, fd_out);
         } else if (strcmp(args[i], "&&") == 0) {
             args[i] = NULL;
-            if (execute_redirections(args, fd_in, fd_out) == 0) {
+            if (execute_redirections_out(args, fd_in, fd_out) == 0) {
                 return execute_chain(args + i + 1, fd_in, fd_out);
             }
+            return 1;
         } else if (strcmp(args[i], "||") == 0) {
             args[i] = NULL;
-            if (execute_redirections(args, fd_in, fd_out) != 0) {
+            if (execute_redirections_out(args, fd_in, fd_out) != 0) {
                 return execute_chain(args + i + 1, fd_in, fd_out);
             }
+            return 0;
         }
     }
-    return  execute_redirections(args, fd_in, fd_out);
+    return  execute_redirections_out(args, fd_in, fd_out);
 }
 
 
