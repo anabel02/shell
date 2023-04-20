@@ -76,6 +76,7 @@ char *replace_again(char *line) {
         no_again_line[pos] = 0;
         char *post_again = replace_again(line + i);
         if (post_again == NULL) {
+            free(no_again_line);
             return NULL;
         }
         return strcat(no_again_line, post_again);
@@ -95,24 +96,37 @@ char *replace_again(char *line) {
     char *ptr;
     long history_command = strtol(arg, &ptr, 10);
 
-    if (ptr[0] == 0 && history_command > 0 && history_command <= history_length) {
-        strcpy(arg, history[history_command - 1]);
-    } else {
-        free(arg);
+    if (ptr[0] != 0) {
         printf("%s\n", "lsh: error near again, again is a reserved keyword");
+        free(arg);
+        free(no_again_line);
+        return NULL;
+    } else if (history_length == 0) {
+        printf("%s\n", "lsh: history is empty");
+        free(arg);
+        free(no_again_line);
+        return NULL;
+    } else if (history_command <= 0 || history_command > history_length) {
+        printf("%s %d\n", "lsh: the command index must be an integer between 1 and", history_length);
+        free(arg);
+        free(no_again_line);
         return NULL;
     }
 
+    strcpy(arg, history[history_command - 1]);
+    arg[strlen(history[history_command - 1]) - 1] = 0;
     for (int i = 0; i < again_pos; ++i) {
         no_again_line[pos++] = line[i];
     }
-
     no_again_line[pos] = 0;
     strcat(no_again_line, arg);
     char *post_again = replace_again(line + j);
     if(post_again == NULL) {
+        free(arg);
+        free(no_again_line);
         return NULL;
     }
     strcat(no_again_line, post_again);
+    free(arg);
     return no_again_line;
 }

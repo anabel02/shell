@@ -4,8 +4,6 @@
 
 #include "execute.h"
 
-/*revisar los return 0, del ; y de las redirecciones
-*/
 
 void print_args(char** args) {
     for (int i = 0; args[i] != NULL; ++i) {
