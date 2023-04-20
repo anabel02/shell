@@ -15,9 +15,8 @@ char specialChars[] = {'|', '<', '>', ';', '&', '\"'};
 
 int is_special_char(char c) {
     for (int i = 0; i < strlen(specialChars); ++i) {
-        if(specialChars[i] == c) {
-            return TRUE;
-        }
+        if (specialChars[i] != c) continue;
+        return TRUE;
     }
     return FALSE;
 }

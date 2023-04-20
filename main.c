@@ -4,18 +4,37 @@
 #include "utils.h"
 #include "execute.h"
 
+/* history | grep his
+ * malloc*/
+
+int special_char_or_blank(char c) {
+    return is_special_char(c) || c == ' ' || c == 0;
+}
+
 char *again(char *line) {
     int again_pos = kmp_matcher(line, "again");
     if (again_pos == -1) {
         return line;
     }
+
     char *no_again_line = malloc(strlen(line) * 5);
     int pos = 0;
     no_again_line[pos] = 0;
-    int j;
+
+    if ((again_pos > 0 && !special_char_or_blank(line[again_pos - 1]))
+    || !special_char_or_blank(line[again_pos + 5])) {
+        int i;
+        for (i = 0; i < again_pos + 5 || !special_char_or_blank(line[i]); ++i) {
+            no_again_line[pos++] = line[i];
+        }
+        no_again_line[pos] = 0;
+        return strcat(no_again_line, again(line + i));
+    }
+
     char* arg = malloc(1024);
     int arg_pos = 0;
     arg[0] = 0;
+    int j;
     for (j = again_pos + 5; line[j] != 0; ++j) {
         if(line[j] != ' ' && !is_special_char(line[j])) {
             arg[arg_pos++] = line[j];
@@ -30,7 +49,8 @@ char *again(char *line) {
         strcpy(arg, history[history_command - 1]);
         arg[strlen(history[history_command - 1]) - 1] = 0;
     } else {
-        printf("lsh: error near again\n");
+        free(arg);
+        printf("%s\n", "lsh: error near again, again is a reserved keyword");
         return NULL;
     }
 
