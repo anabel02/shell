@@ -69,6 +69,10 @@ int lsh_execute_simple(char **args, int fd_in, int fd_out)
         return 0;
     }
 
+    if (strcmp(args[0], "if") == 0) {
+        return lsh_execute_conditional(args);
+    }
+
     for (int i = 0; i < lsh_num_builtins(); i++) {
         if (strcmp(args[0], builtin_str[i]) == 0) {
             return (*builtin_func[i])(args);
@@ -108,11 +112,16 @@ int lsh_execute_redirections_out(char **args, int fd_in, int fd_out) {
         return 0;
     }
 
-    if (strcmp(args[0], "if") == 0) {
-        return lsh_execute_conditional(args);
-    }
+    int open_conditionals = 0;
 
     for (int i = 0; args[i] != NULL; ++i) {
+        if (strcmp(args[i], "if") == 0) {
+            open_conditionals++;
+        }
+        if (strcmp(args[i], "end") == 0) {
+            open_conditionals--;
+        }
+        if (open_conditionals > 0) continue;
         if (strcmp(args[i], "|") == 0) {
             args[i] = NULL;
             int fd[2];
@@ -134,11 +143,14 @@ int lsh_execute_redirections_out(char **args, int fd_in, int fd_out) {
                 perror("lsh");
                 return 1;
             }
+            int old_out = dup(STDOUT_FILENO);
+            dup2(fd, STDOUT_FILENO);
             int exit_status = lsh_execute_redirections_in(args, fd_in, fd);
+            dup2(old_out, STDOUT_FILENO);
+            close(fd);
             if(args[i + 2] != NULL) {
                 exit_status += lsh_execute_redirections_out(args + i + 2, fd_in, fd_out);
             }
-            close(fd);
             return exit_status;
         } else if (strcmp(args[i], ">>") == 0) {
             args[i] = NULL;
@@ -147,11 +159,15 @@ int lsh_execute_redirections_out(char **args, int fd_in, int fd_out) {
                 perror("lsh");
                 return 1;
             }
+
+            int old_out = dup(STDOUT_FILENO);
+            dup2(fd, STDOUT_FILENO);
             int exit_status = lsh_execute_redirections_in(args, fd_in, fd);
+            dup2(old_out, STDOUT_FILENO);
+            close(fd);
             if(args[i + 2] != NULL) {
                 exit_status += lsh_execute_redirections_out(args + i + 2, fd_in, fd_out);
             }
-            close(fd);
             return exit_status;
         }
     }

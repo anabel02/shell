@@ -7,24 +7,25 @@
 
 char *builtin_str[] = {
         "cd",
-        "help",
         "exit",
         "true",
         "false",
-        "jobs",
         "fg",
+        "help",
+        "jobs",
         "history"
 };
 
 
+
 int (*builtin_func[]) (char **) = {
         &lsh_cd,
-        &lsh_help,
         &lsh_exit,
         &lsh_true,
         &lsh_false,
-        &lsh_jobs,
         &lsh_foreground,
+        &lsh_help,
+        &lsh_jobs,
         &lsh_history
 };
 
@@ -80,7 +81,7 @@ int lsh_jobs(char **args) {
         return 1;
     } else {
         for (int i = 0; i < bg_pid_list->len; ++i) {
-            printf("[%d] %d\n", i + 1, get(bg_pid_list, i));
+            fprintf(stdout,"[%d] %d\n", i + 1, get(bg_pid_list, i));
         }
     }
     return 0;
@@ -130,9 +131,9 @@ int lsh_history(char **args) {
         return 1;
     }
     for (int i = 0; i < history_length; ++i) {
-        printf("%d: %s", i + 1, history[i]);
+        fprintf(stdout, "%d: %s", i + 1, history[i]);
     }
-    printf("\n");
+    fprintf(stdout, "\n");
     return 0;
 }
 

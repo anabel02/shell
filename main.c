@@ -4,7 +4,7 @@
 #include "utils.h"
 #include "execute.h"
 
-/* history | grep his
+/* history | grep his    arreglar redirecciones con builtin
  * malloc*/
 
 char *replace_again(char *line);
@@ -53,6 +53,7 @@ void lsh_loop() {
     } while (status >= 0);
 }
 
+
 /** Reemplaza las ocurrencias de again \<command\> por el comando correspondiente en history\n
  * Devuelve NULL si existe un error de sintaxis
 **/
@@ -96,7 +97,6 @@ char *replace_again(char *line) {
 
     if (ptr[0] == 0 && history_command > 0 && history_command <= history_length) {
         strcpy(arg, history[history_command - 1]);
-        arg[strlen(history[history_command - 1]) - 1] = 0;
     } else {
         free(arg);
         printf("%s\n", "lsh: error near again, again is a reserved keyword");
