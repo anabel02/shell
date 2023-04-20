@@ -8,7 +8,14 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+#include <fcntl.h>
+
 #include "list.h"
+
+#define HISTORY_MAX_SIZE 10
+
+char* history[HISTORY_MAX_SIZE];
+int history_length;
 
 List* bg_pid_list;
 
@@ -19,8 +26,10 @@ int lsh_true(char **args);
 int lsh_false(char **args);
 int lsh_jobs(char **args);
 int lsh_foreground(char **args);
+int lsh_history(char **args);
 
-
+void lsh_load_history();
+void lsh_save_history(char *line);
 int lsh_num_builtins();
 void lsh_update_background();
 

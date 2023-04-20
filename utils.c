@@ -2,26 +2,13 @@
 // Created by anabel on 4/1/2023.
 //
 
-#include "utils.h"
-
-#include <stdio.h>
-#include <stdlib.h>
-#include <unistd.h>
-#include <string.h>
-#include <pwd.h>
-#include <bits/local_lim.h>
-
-
-#define BOLD_CYAN "\033[1;36m"
-
-#define TRUE 1
-#define FALSE 0
-
 /* REVISAR MENSAJES DE ERROR
  *(base) anabelbg@LAPTOP-8190EOER:/mnt/c/Users/anabe/CLionProjects/shell/cmake-build-debug$ ~
 -bash: /home/anabelbg: Is a directory
  errores de sintaxis
  * */
+
+#include "utils.h"
 
 char specialChars[] = {'|', '<', '>', ';', '&', '\"'};
 
@@ -36,24 +23,66 @@ int is_special_char(char c) {
 }
 
 
+int *compute_prefix_function(char *pattern) {
+    size_t m = strlen(pattern);
+    int *pi = malloc(m * sizeof(int));
+    pi[0] = 0;
+    int k = 0;
+    for (int q = 1; q < m; ++q) {
+        while (k > 0 && pattern[k] != pattern[q]) {
+            k = pi[k - 1];
+        }
+        if (pattern[k] == pattern[q]) {
+            k++;
+        }
+        pi[q] = k;
+    }
+    return pi;
+}
+
+
+int kmp_matcher(char *text, char *pattern) {
+    size_t n = strlen(text);
+    size_t m = strlen(pattern);
+    int *pi = compute_prefix_function(pattern);
+    int q = 0;
+    int quotes = 0;
+    for (int i = 0; i < n; ++i) {
+        if (text[i] == '\"') {
+            quotes++;
+        }
+        if (quotes % 2 == 1) continue;
+        while (q > 0 && pattern[q] != text[i]) {
+            q = pi[q - 1];
+        }
+        if (pattern[q] == text[i]) {
+            q++;
+        }
+        if (q == m) {
+            return i - (int)m + 1;
+        }
+    }
+    free(pi);
+    return -1;
+}
+
+
 char *lsh_read_line(void) {
     size_t size = 64;
     char *line = malloc(size);
     int pos = 0;
     char c;
 
-    do {
-        if (scanf("%c", &c) == EOF) {
-            return line;
-        }
+    while (scanf("%c", &c) != EOF && c != '\n'){
         if (pos == size - 1) {
             size *= 2;
             line = realloc(line, size);
         }
         line[pos++] = c;
-    } while(c != '\n');
+    }
 
     line[pos] = '\0';
+
     return line;
 }
 
