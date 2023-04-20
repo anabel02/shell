@@ -13,21 +13,20 @@
 
 
 #define BOLD_CYAN "\033[1;36m"
-typedef int bool_t;
+
 #define TRUE 1
 #define FALSE 0
 
 /* REVISAR MENSAJES DE ERROR
  *(base) anabelbg@LAPTOP-8190EOER:/mnt/c/Users/anabe/CLionProjects/shell/cmake-build-debug$ ~
 -bash: /home/anabelbg: Is a directory
- teamaño de linea limpia
  errores de sintaxis
  * */
 
 char specialChars[] = {'|', '<', '>', ';', '&', '\"'};
 
 
-bool_t is_special_char(char c) {
+int is_special_char(char c) {
     for (int i = 0; i < strlen(specialChars); ++i) {
         if(specialChars[i] == c) {
             return TRUE;
@@ -59,7 +58,7 @@ char *lsh_read_line(void) {
 }
 
 
-char *clean_line(char *line) {
+char *lsh_clean_line(char *line) {
     int home_dir = 0;
     for (int i = 0; line[i] != 0; ++i) {
         if(line[i] != '~') continue;
@@ -179,7 +178,7 @@ char **lsh_split_line(char *line) {
 }
 
 
-void print_prompt() {
+void lsh_print_prompt() {
     struct passwd* pwd = getpwuid(getuid());
 
     char hostname[HOST_NAME_MAX];

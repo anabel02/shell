@@ -11,4 +11,4 @@
 #include "builtin.h"
 
 int lsh_execute(char **args);
-int execute_conditional(char **args);
+int lsh_execute_conditional(char **args);

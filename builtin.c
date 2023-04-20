@@ -22,8 +22,8 @@ int (*builtin_func[]) (char **) = {
         &lsh_exit,
         &lsh_true,
         &lsh_false,
-        &jobs,
-        &foreground
+        &lsh_jobs,
+        &lsh_foreground
 };
 
 
@@ -72,7 +72,7 @@ int lsh_false(char **args) {
 }
 
 
-int jobs(char **args) {
+int lsh_jobs(char **args) {
     if (args[1] != NULL) {
         fprintf(stderr, "lsh: jobs: too many arguments\n");
         return 1;
@@ -85,7 +85,7 @@ int jobs(char **args) {
 }
 
 
-void update_background() {
+void lsh_update_background() {
     int status;
     for (int i = 0; i < bg_pid_list->len; ++i) {
         int pid_t = waitpid(bg_pid_list->array[i], &status, WNOHANG);
@@ -97,7 +97,7 @@ void update_background() {
 }
 
 
-int foreground(char **args) {
+int lsh_foreground(char **args) {
     if (args[1] == NULL) {
         int pid = get(bg_pid_list, bg_pid_list->len - 1);
         int status;
