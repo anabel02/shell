@@ -160,7 +160,7 @@ int execute_redirections_out(char **args, int fd_in, int fd_out) {
 }
 
 
-int execute_chain(char **args, int fd_in, int fd_out) {
+int execute_chain(char **args) {
     if (args[0] == NULL) {
         return 0;
     }
@@ -177,17 +177,17 @@ int execute_chain(char **args, int fd_in, int fd_out) {
         if (open_conditionals > 0) continue;
         if (strcmp(args[i], ";") == 0) {
             args[i] = NULL;
-            return execute_redirections_out(args, fd_in, fd_out) + execute_chain(args + i + 1, fd_in, fd_out);
+            return execute_redirections_out(args, -1, -1) + execute_chain(args + i + 1);
         } else if (strcmp(args[i], "&&") == 0) {
             args[i] = NULL;
-            if (execute_redirections_out(args, fd_in, fd_out) == 0) {
-                return execute_chain(args + i + 1, fd_in, fd_out);
+            if (execute_redirections_out(args, -1, -1) == 0) {
+                return execute_chain(args + i + 1);
             }
             return 1;
         } else if (strcmp(args[i], "||") == 0) {
             args[i] = NULL;
-            if (execute_redirections_out(args, fd_in, fd_out) != 0) {
-                return execute_chain(args + i + 1, fd_in, fd_out);
+            if (execute_redirections_out(args, -1, -1) != 0) {
+                return execute_chain(args + i + 1);
             }
             return 0;
         }
@@ -196,22 +196,21 @@ int execute_chain(char **args, int fd_in, int fd_out) {
     if (strcmp(args[len(args) - 1], "&") == 0) {
         args[len(args) - 1] = NULL;
         pid_t pid = fork();
-
         if (pid < 0) {
             perror("lsh");
         } else if (pid == 0) {
             setpgid(0, 0);
-            execute_redirections_out(args, fd_in, fd_out);
+            execute_redirections_out(args, -1, -1);
             exit(EXIT_FAILURE);
         } else {
             setpgid(pid, pid);
             append(bg_pid_list, pid);
-            printf("[%d]\t%d\n",bg_pid_list->len,pid);
+            printf("[%d]\t%d\n", bg_pid_list->len, pid);
             return 0;
         }
     }
 
-    return execute_redirections_out(args, fd_in, fd_out);
+    return execute_redirections_out(args, -1, -1);
 }
 
 
@@ -261,5 +260,5 @@ int execute_conditional(char **args) {
 
 
 int lsh_execute(char** args) {
-    return execute_chain(args, -1, -1);
+    return execute_chain(args);
 }

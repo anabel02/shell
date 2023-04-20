@@ -84,16 +84,11 @@ int jobs(char **args) {
 
 void update_background() {
     int status;
-
-    if (bg_pid_list->len > 0) {
-        for (int i = 0; i < bg_pid_list->len; ++i) {
-            waitpid(bg_pid_list->array[i], &status, WNOHANG);
-            if (WIFEXITED(status)) {
-                printf("[%d]\tDone\t%d\n", i + 1, bg_pid_list->array[i]);
-                remove_at(bg_pid_list, i);
-
-                i = -1;
-            }
-        }
+    for (int i = 0; i < bg_pid_list->len; ++i) {
+        int pid_t = waitpid(bg_pid_list->array[i], &status, WNOHANG);
+        if (pid_t <= 0) continue;
+        printf("[%d]\tDone\t%d\n", i + 1, bg_pid_list->array[i]);
+        remove_at(bg_pid_list, i);
+        i = -1;
     }
 }

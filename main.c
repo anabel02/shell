@@ -12,6 +12,7 @@ void lsh_loop() {
 
     do {
         update_background();
+
         print_prompt();
         line = lsh_read_line();
         cline = clean_line(line);
