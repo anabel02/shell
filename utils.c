@@ -10,7 +10,7 @@
 
 #include "utils.h"
 
-char specialChars[] = {'|', '<', '>', ';', '&', '\"'};
+char specialChars[] = {'|', '<', '>', ';', '&'};
 
 
 int is_special_char(char c) {
@@ -19,6 +19,11 @@ int is_special_char(char c) {
         return TRUE;
     }
     return FALSE;
+}
+
+
+int special_char_or_blank(char c) {
+    return is_special_char(c) || c == ' ' || c == 0;
 }
 
 

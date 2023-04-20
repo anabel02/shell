@@ -8,6 +8,7 @@
 #include <string.h>
 #include <pwd.h>
 #include <bits/local_lim.h>
+
 #include "list.h"
 
 #define BOLD_CYAN "\033[1;36m"
@@ -20,4 +21,4 @@ char *lsh_clean_line(char *line);
 char **lsh_split_line(char *line);
 void lsh_print_prompt();
 int kmp_matcher(char *text, char *pattern);
-int is_special_char(char c);
+int special_char_or_blank(char c);
