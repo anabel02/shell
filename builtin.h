@@ -18,6 +18,9 @@ int lsh_exit(char **args);
 int lsh_true(char **args);
 int lsh_false(char **args);
 int jobs(char **args);
+int foreground(char **args);
+
+
 int lsh_num_builtins();
 void update_background();
 

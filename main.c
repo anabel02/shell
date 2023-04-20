@@ -11,12 +11,13 @@ void lsh_loop() {
     int status;
 
     do {
-        update_background();
-
         print_prompt();
         line = lsh_read_line();
         cline = clean_line(line);
         args = lsh_split_line(cline);
+
+        update_background();
+
         status = lsh_execute(args);
 
         free(line);
