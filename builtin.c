@@ -10,10 +10,7 @@ char *builtin_str[] = {
         "exit",
         "true",
         "false",
-        "fg",
-        "help",
-        "jobs",
-        "history"
+        "fg"
 };
 
 
@@ -23,10 +20,7 @@ int (*builtin_func[]) (char **) = {
         &lsh_exit,
         &lsh_true,
         &lsh_false,
-        &lsh_foreground,
-        &lsh_help,
-        &lsh_jobs,
-        &lsh_history
+        &lsh_foreground
 };
 
 
@@ -34,6 +28,25 @@ int lsh_num_builtins() {
     return sizeof(builtin_str) / sizeof(char *);
 }
 
+
+char *builtin_str_out[] = {
+        "help",
+        "jobs",
+        "history"
+};
+
+
+
+int (*builtin_func_out[]) (char **) = {
+        &lsh_help,
+        &lsh_jobs,
+        &lsh_history
+};
+
+
+int lsh_num_builtins_out() {
+    return sizeof(builtin_str_out) / sizeof(char *);
+}
 
 int lsh_cd(char **args) {
     if (args[1] == NULL) {
@@ -51,12 +64,22 @@ int lsh_cd(char **args) {
 
 
 int lsh_help(char **args) {
-    int i;
+    if (args[1] == NULL) {
+        for (int i = 0; i < lsh_num_commands_help(); i++) {
+            printf("%s: %s", commands[i], commands_help[i]);
+        }
+        return 0;
 
-    for (i = 0; i < lsh_num_builtins(); i++) {
-        printf("  %s\n", builtin_str[i]);
+    } else if (args[2] != NULL){
+        fprintf(stderr, "lsh: help: too many arguments\n");
+    } else {
+        for (int i = 0; i < lsh_num_commands_help(); i++) {
+            if (strcmp(args[1], commands[i]) != 0) continue;
+            printf("%s: %s", commands[i], commands_help[i]);
+            return 0;
+        }
     }
-    return 0;
+    return 1;
 }
 
 
@@ -206,7 +229,6 @@ void lsh_update_background() {
     for (int i = 0; i < bg_pid_list->len; ++i) {
         int pid_t = waitpid(bg_pid_list->array[i], &status, WNOHANG);
         if (pid_t <= 0) continue;
-        printf("[%d]\tDone\t%d\n", i + 1, bg_pid_list->array[i]);
         remove_at(bg_pid_list, i);
         i = -1;
     }

@@ -11,6 +11,7 @@
 #include <fcntl.h>
 
 #include "list.h"
+#include "help.h"
 
 #define HISTORY_MAX_SIZE 10
 
@@ -31,7 +32,10 @@ int lsh_history(char **args);
 void lsh_load_history();
 void lsh_save_history(char *line);
 int lsh_num_builtins();
+int lsh_num_builtins_out();
 void lsh_update_background();
 
 extern char *builtin_str[];
+extern char *builtin_str_out[];
 extern int (*builtin_func[]) (char **);
+extern int (*builtin_func_out[]) (char **);

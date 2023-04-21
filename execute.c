@@ -39,6 +39,12 @@ int lsh_launch(char **args, int fd_in, int fd_out) {
             close(fd_out);
         }
 
+        for (int i = 0; i < lsh_num_builtins_out(); i++) {
+            if (strcmp(args[0], builtin_str_out[i]) == 0) {
+                exit((*builtin_func_out[i])(args));
+            }
+        }
+
         if (execvp(args[0], args) == -1) {
             perror("lsh");
         }
@@ -65,10 +71,6 @@ int lsh_execute_simple(char **args, int fd_in, int fd_out)
 {
     if (args[0] == NULL) {
         return 0;
-    }
-
-    if (strcmp(args[0], "if") == 0) {
-        return lsh_execute_conditional(args);
     }
 
     for (int i = 0; i < lsh_num_builtins(); i++) {
@@ -110,16 +112,11 @@ int lsh_execute_redirections_out(char **args, int fd_in, int fd_out) {
         return 0;
     }
 
-    int open_conditionals = 0;
+    if (strcmp(args[0], "if") == 0) {
+        return lsh_execute_conditional(args);
+    }
 
     for (int i = 0; args[i] != NULL; ++i) {
-        if (strcmp(args[i], "if") == 0) {
-            open_conditionals++;
-        }
-        if (strcmp(args[i], "end") == 0) {
-            open_conditionals--;
-        }
-        if (open_conditionals > 0) continue;
         if (strcmp(args[i], "|") == 0) {
             args[i] = NULL;
             int fd[2];
@@ -141,10 +138,7 @@ int lsh_execute_redirections_out(char **args, int fd_in, int fd_out) {
                 perror("lsh");
                 return 1;
             }
-            int old_out = dup(STDOUT_FILENO);
-            dup2(fd, STDOUT_FILENO);
             int exit_status = lsh_execute_redirections_in(args, fd_in, fd);
-            dup2(old_out, STDOUT_FILENO);
             close(fd);
             if(args[i + 2] != NULL) {
                 exit_status += lsh_execute_redirections_out(args + i + 2, fd_in, fd_out);
@@ -158,10 +152,7 @@ int lsh_execute_redirections_out(char **args, int fd_in, int fd_out) {
                 return 1;
             }
 
-            int old_out = dup(STDOUT_FILENO);
-            dup2(fd, STDOUT_FILENO);
             int exit_status = lsh_execute_redirections_in(args, fd_in, fd);
-            dup2(old_out, STDOUT_FILENO);
             close(fd);
             if(args[i + 2] != NULL) {
                 exit_status += lsh_execute_redirections_out(args + i + 2, fd_in, fd_out);
@@ -173,6 +164,31 @@ int lsh_execute_redirections_out(char **args, int fd_in, int fd_out) {
 }
 
 
+/** Ejecuta un proceso en el background \n
+ * args: comando que termina con el operador &
+  **/
+int lsh_background(char **args) {
+    args[len(args) - 1] = NULL;
+    pid_t pid = fork();
+    if (pid < 0) {
+        perror("lsh");
+    } else if (pid == 0) {
+        setpgid(0, 0);
+        lsh_execute_redirections_out(args, -1, -1);
+        exit(EXIT_FAILURE);
+    } else {
+        setpgid(pid, pid);
+        append(bg_pid_list, pid);
+        printf("[%d]\t%d\n", bg_pid_list->len, pid);
+        return 0;
+    }
+    return 1;
+}
+
+/** Si el comando está separado por caracteres de cadena && ;
+ * ejecuta su respectiva funcionalidad, si no lo está revisa
+ * si debe ejecutarse en el background o no y lo ejecuta en dependencia.
+  **/
 int lsh_execute_chain(char **args) {
     if (args[0] == NULL) {
         return 0;
@@ -206,27 +222,16 @@ int lsh_execute_chain(char **args) {
         }
     }
 
-    if (strcmp(args[len(args) - 1], "&") == 0) {
-        args[len(args) - 1] = NULL;
-        pid_t pid = fork();
-        if (pid < 0) {
-            perror("lsh");
-        } else if (pid == 0) {
-            setpgid(0, 0);
-            lsh_execute_redirections_out(args, -1, -1);
-            exit(EXIT_FAILURE);
-        } else {
-            setpgid(pid, pid);
-            append(bg_pid_list, pid);
-            printf("[%d]\t%d\n", bg_pid_list->len, pid);
-            return 0;
-        }
-    }
-
-    return lsh_execute_redirections_out(args, -1, -1);
+    return strcmp(args[len(args) - 1], "&") == 0 ?
+        lsh_background(args) :
+        lsh_execute_redirections_out(args, -1, -1);
 }
 
-
+/** Ejecuta una condicional con estructura \n
+ * if \<command1\> then \<command2\> else \<command3\> end.
+    \param
+    args: comando que inicia con el keyword if.
+  **/
 int lsh_execute_conditional(char **args) {
     int if_pos = 0;
     args[0] = NULL;
@@ -257,12 +262,12 @@ int lsh_execute_conditional(char **args) {
     }
 
     if(args[end_pos + 1] != NULL) {
-        printf("lsh: después del end debe aparecer algun separador ;  && ||\n");
+        printf("lsh: después del end debe aparecer algun caracter de cadena\n");
     }
 
     if (then_pos != -1 && end_pos != -1) {
         if (lsh_execute_chain(args + if_pos + 1) == 0) {
-            return lsh_execute_chain(args + then_pos + 1) ;
+            return lsh_execute_chain(args + then_pos + 1);
         } else if (else_pos != -1) {
             return lsh_execute_chain(args + else_pos + 1);
         }
