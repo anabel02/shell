@@ -7,4 +7,5 @@
 
 extern char *commands[];
 extern char *commands_help[];
+int lsh_num_commands_help();
 #endif //SHELL_HELP_H
