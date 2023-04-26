@@ -4,7 +4,8 @@
 #include "utils.h"
 #include "execute.h"
 
-/* malloc comando mas largo por cantidad de again*/
+/* malloc comando mas largo por cantidad de again
+ * help again*/
 
 char *replace_again(char *line);
 void lsh_loop();
@@ -54,7 +55,7 @@ void lsh_loop() {
 
 
 /** Reemplaza las ocurrencias de again \<command\> por el comando correspondiente en history\n
- * Devuelve NULL si existe un error de sintaxis
+ * cuando es un comando válido
 **/
 char *replace_again(char *line) {
     int again_pos = kmp_matcher(line, "again");
@@ -82,7 +83,7 @@ char *replace_again(char *line) {
         char *post_again = replace_again(line + i);
         if (post_again == NULL) {
             free(no_again_line);
-            return NULL;
+            return line;
         }
         return strcat(no_again_line, post_again);
     }
@@ -105,17 +106,17 @@ char *replace_again(char *line) {
         printf("%s\n", "lsh: syntax error near again");
         free(arg);
         free(no_again_line);
-        return NULL;
+        return line;
     } else if (history_length == 0) {
         printf("%s\n", "lsh: history is empty");
         free(arg);
         free(no_again_line);
-        return NULL;
+        return line;
     } else if (history_command <= 0 || history_command > history_length) {
         printf("%s %ld\n", "lsh: history index out of range:", history_command);
         free(arg);
         free(no_again_line);
-        return NULL;
+        return line;
     }
 
     strcpy(arg, history[history_command - 1]);
@@ -130,7 +131,7 @@ char *replace_again(char *line) {
     if(post_again == NULL) {
         free(arg);
         free(no_again_line);
-        return NULL;
+        return line;
     }
     free(arg);
     return strcat(no_again_line, post_again);
