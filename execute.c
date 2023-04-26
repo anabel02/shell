@@ -4,7 +4,6 @@
 
 #include "execute.h"
 
-
 void print_args(char** args) {
     for (int i = 0; args[i] != NULL; ++i) {
         printf("%s ", args[i]);
@@ -98,8 +97,9 @@ int lsh_execute_redirections_in(char **args, int fd_in, int fd_out) {
         }
         int exit_status = lsh_execute_simple(args, fd, fd_out);
         if(args[i + 2] != NULL) {
-            exit_status += lsh_execute_simple(args + i + 2, fd_in, fd_out);
-        }
+              printf("lsh: syntax error near <\n");
+              return 1;
+          }
         close(fd);
         return exit_status;
     }
@@ -141,7 +141,8 @@ int lsh_execute_redirections_out(char **args, int fd_in, int fd_out) {
             int exit_status = lsh_execute_redirections_in(args, fd_in, fd);
             close(fd);
             if(args[i + 2] != NULL) {
-                exit_status += lsh_execute_redirections_out(args + i + 2, fd_in, fd_out);
+                printf("lsh: syntax error near >\n");
+                return 1;
             }
             return exit_status;
         } else if (strcmp(args[i], ">>") == 0) {
@@ -155,7 +156,8 @@ int lsh_execute_redirections_out(char **args, int fd_in, int fd_out) {
             int exit_status = lsh_execute_redirections_in(args, fd_in, fd);
             close(fd);
             if(args[i + 2] != NULL) {
-                exit_status += lsh_execute_redirections_out(args + i + 2, fd_in, fd_out);
+                printf("lsh: syntax error near >>\n");
+                return 1;
             }
             return exit_status;
         }
@@ -185,7 +187,7 @@ int lsh_background(char **args) {
     return 1;
 }
 
-/** Si el comando está separado por caracteres de cadena && ;
+/** Si el comando está separado por caracteres de cadena && ; ||
  * ejecuta su respectiva funcionalidad, si no lo está revisa
  * si debe ejecutarse en el background o no y lo ejecuta en dependencia.
   **/
@@ -262,14 +264,15 @@ int lsh_execute_conditional(char **args) {
     }
 
     if(args[end_pos + 1] != NULL) {
-        printf("lsh: después del end debe aparecer algun caracter de cadena\n");
+        printf("lsh: syntax error near end\n");
+        return 1;
     }
 
     if (then_pos != -1 && end_pos != -1) {
-        if (lsh_execute_chain(args + if_pos + 1) == 0) {
-            return lsh_execute_chain(args + then_pos + 1);
+        if (lsh_execute(args + if_pos + 1) == 0) {
+            return lsh_execute(args + then_pos + 1);
         } else if (else_pos != -1) {
-            return lsh_execute_chain(args + else_pos + 1);
+            return lsh_execute(args + else_pos + 1);
         }
     }
 
