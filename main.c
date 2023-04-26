@@ -53,8 +53,7 @@ void lsh_loop() {
 }
 
 
-/** Reemplaza las ocurrencias de again \<command\> por el comando correspondiente en history\n
- * cuando es un comando válido
+/** Reemplaza las ocurrencias de again \<command\> por el comando correspondiente en history cuando es un comando válido.
 **/
 char *replace_again(char *line) {
     int again_pos = kmp_matcher(line, "again");
@@ -79,22 +78,20 @@ char *replace_again(char *line) {
             no_again_line[pos++] = line[i];
         }
         no_again_line[pos] = 0;
-        char *post_again = replace_again(line + i);
-        if (post_again == NULL) {
-            free(no_again_line);
-            return line;
-        }
-        return strcat(no_again_line, post_again);
+        return strcat(no_again_line, replace_again(line + i));
     }
 
     char* arg = malloc(1024);
     int arg_pos = 0;
     int j;
+    int blanks = 0;
     for (j = again_pos + 5; line[j] != 0; ++j) {
-        if (!is_special_char_or_blank(line[j])) {
-            arg[arg_pos++] = line[j];
-        } else if (arg_pos > 0 || is_special_char(line[j])) {
+        if ((line[j] == ' ' && arg_pos > 0) || is_special_char(line[j])) {
             break;
+        } else if (!is_special_char_or_blank(line[j])) {
+            arg[arg_pos++] = line[j];
+        } else {
+            blanks++;
         }
     }
     arg[arg_pos] = 0;
@@ -102,18 +99,22 @@ char *replace_again(char *line) {
     long history_command = strtol(arg, &ptr, 10);
 
     if (ptr[0] == 0 && history_command > 0 && history_command <= history_length) {
+        blanks = 0;
         strcpy(arg, history[history_command - 1]);
         arg[strlen(history[history_command - 1]) - 1] = 0;
     } else if (history_length == 0) {
         printf("%s\n", "lsh: history is empty");
         again_pos += 5;
     } else {
-        printf("%s %ld\n", "lsh: history index out of range:", history_command);
+        printf("%s %d\n", "lsh: history index must be an integer between 1 and", history_length);
         again_pos += 5;
     }
 
     for (int i = 0; i < again_pos; ++i) {
         no_again_line[pos++] = line[i];
+    }
+    for (int i = 0; i < blanks; ++i) {
+        no_again_line[pos++] = ' ';
     }
     no_again_line[pos] = 0;
     strcat(no_again_line, arg);
