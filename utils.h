@@ -21,4 +21,4 @@ char *lsh_clean_line(char *line);
 char **lsh_split_line(char *line);
 void lsh_print_prompt();
 int kmp_matcher(char *text, char *pattern);
-int special_char_or_blank(char c);
+int is_special_char_or_blank(char c);

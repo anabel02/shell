@@ -4,7 +4,7 @@
 #include "utils.h"
 #include "execute.h"
 
-/* malloc*/
+/* malloc comando mas largo por cantidad de again*/
 
 char *replace_again(char *line);
 void lsh_loop();
@@ -62,14 +62,20 @@ char *replace_again(char *line) {
         return line;
     }
 
-    char *no_again_line = malloc(strlen(line) * 5);
+    size_t max_command_length = 0;
+    for (int i = 0; i < history_length; ++i) {
+        max_command_length = max_command_length > strlen(history[i]) ? max_command_length : strlen(history[i]);
+    }
+
+    char *no_again_line = malloc(strlen(line) + max_command_length * 10);
     int pos = 0;
     no_again_line[pos] = 0;
 
-    if ((again_pos > 0 && !special_char_or_blank(line[again_pos - 1]))
-        || !special_char_or_blank(line[again_pos + 5])) {
+    //Si el patrón again está contenido en otra palabra, se ignora
+    if ((again_pos > 0 && !is_special_char_or_blank(line[again_pos - 1]))
+        || !is_special_char_or_blank(line[again_pos + 5])) {
         int i;
-        for (i = 0; i < again_pos + 5 || !special_char_or_blank(line[i]); ++i) {
+        for (i = 0; i < again_pos + 5 || !is_special_char_or_blank(line[i]); ++i) {
             no_again_line[pos++] = line[i];
         }
         no_again_line[pos] = 0;
@@ -85,7 +91,7 @@ char *replace_again(char *line) {
     int arg_pos = 0;
     int j;
     for (j = again_pos + 5; line[j] != 0; ++j) {
-        if (!special_char_or_blank(line[j])) {
+        if (!is_special_char_or_blank(line[j])) {
             arg[arg_pos++] = line[j];
         } else if (arg_pos > 0) {
             break;
@@ -96,7 +102,7 @@ char *replace_again(char *line) {
     long history_command = strtol(arg, &ptr, 10);
 
     if (ptr[0] != 0) {
-        printf("%s\n", "lsh: error near again, again is a keyword");
+        printf("%s\n", "lsh: syntax error near again");
         free(arg);
         free(no_again_line);
         return NULL;
@@ -106,7 +112,7 @@ char *replace_again(char *line) {
         free(no_again_line);
         return NULL;
     } else if (history_command <= 0 || history_command > history_length) {
-        printf("%s %d\n", "lsh: the command index must be an integer between 1 and", history_length);
+        printf("%s %ld\n", "lsh: history index out of range:", history_command);
         free(arg);
         free(no_again_line);
         return NULL;
@@ -114,6 +120,7 @@ char *replace_again(char *line) {
 
     strcpy(arg, history[history_command - 1]);
     arg[strlen(history[history_command - 1]) - 1] = 0;
+
     for (int i = 0; i < again_pos; ++i) {
         no_again_line[pos++] = line[i];
     }
@@ -125,7 +132,6 @@ char *replace_again(char *line) {
         free(no_again_line);
         return NULL;
     }
-    strcat(no_again_line, post_again);
     free(arg);
-    return no_again_line;
+    return strcat(no_again_line, post_again);
 }

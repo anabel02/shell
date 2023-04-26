@@ -2,12 +2,6 @@
 // Created by anabel on 4/1/2023.
 //
 
-/* REVISAR MENSAJES DE ERROR
- *(base) anabelbg@LAPTOP-8190EOER:/mnt/c/Users/anabe/CLionProjects/shell/cmake-build-debug$ ~
--bash: /home/anabelbg: Is a directory
- errores de sintaxis
- * */
-
 #include "utils.h"
 
 char specialChars[] = {'|', '<', '>', ';', '&'};
@@ -22,7 +16,7 @@ int is_special_char(char c) {
 }
 
 
-int special_char_or_blank(char c) {
+int is_special_char_or_blank(char c) {
     return is_special_char(c) || c == ' ' || c == 0;
 }
 
