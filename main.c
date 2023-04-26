@@ -101,13 +101,6 @@ char *replace_again(char *line) {
     char *ptr;
     long history_command = strtol(arg, &ptr, 10);
 
-    if (ptr[0] != 0 || arg[0] == 0) {
-    } else if (history_length == 0) {
-        printf("%s\n", "lsh: history is empty");
-    } else if (history_command <= 0 || history_command > history_length) {
-        printf("%s %ld\n", "lsh: history index out of range:", history_command);
-    }
-
     if (ptr[0] == 0 && history_command > 0 && history_command <= history_length) {
         strcpy(arg, history[history_command - 1]);
         arg[strlen(history[history_command - 1]) - 1] = 0;
