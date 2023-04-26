@@ -4,7 +4,8 @@
 #include "utils.h"
 #include "execute.h"
 
-/* malloc comando mas largo por cantidad de again*/
+/* malloc comando mas largo por cantidad de again
+ * liberar memoria*/
 
 char *replace_again(char *line);
 void lsh_loop();
