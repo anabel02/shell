@@ -97,9 +97,9 @@ int lsh_execute_redirections_in(char **args, int fd_in, int fd_out) {
         }
         int exit_status = lsh_execute_simple(args, fd, fd_out);
         if(args[i + 2] != NULL) {
-              printf("lsh: syntax error near <\n");
-              return 1;
-          }
+            printf("lsh: syntax error near <\n");
+            return 1;
+        }
         close(fd);
         return exit_status;
     }
@@ -124,6 +124,7 @@ int lsh_execute_redirections_out(char **args, int fd_in, int fd_out) {
                 perror("lsh");
                 return 1;
             }
+
             int exit_status = lsh_execute_redirections_in(args, fd_in, fd[1]);
             if (args[i + 1] != NULL) {
                 exit_status += lsh_execute_redirections_out(args + i + 1, fd[0], fd_out);
@@ -138,6 +139,7 @@ int lsh_execute_redirections_out(char **args, int fd_in, int fd_out) {
                 perror("lsh");
                 return 1;
             }
+
             int exit_status = lsh_execute_redirections_in(args, fd_in, fd);
             close(fd);
             if(args[i + 2] != NULL) {
@@ -187,6 +189,7 @@ int lsh_background(char **args) {
     return 1;
 }
 
+
 /** Si el comando está separado por caracteres de cadena && ; ||
  * ejecuta su respectiva funcionalidad, si no lo está revisa
  * si debe ejecutarse en el background o no y lo ejecuta en dependencia.
@@ -229,6 +232,7 @@ int lsh_execute_chain(char **args) {
         lsh_execute_redirections_out(args, -1, -1);
 }
 
+
 /** Ejecuta una condicional con estructura \n
  * if \<command1\> then \<command2\> else \<command3\> end.
     \param
@@ -263,17 +267,19 @@ int lsh_execute_conditional(char **args) {
         }
     }
 
-    if(args[end_pos + 1] != NULL) {
-        printf("lsh: syntax error near end\n");
+    if (then_pos == -1 || end_pos == -1 || then_pos > end_pos) {
+        printf("lsh: syntax error in if statement");
         return 1;
     }
 
-    if (then_pos != -1 && end_pos != -1) {
-        if (lsh_execute(args + if_pos + 1) == 0) {
-            return lsh_execute(args + then_pos + 1);
-        } else if (else_pos != -1) {
-            return lsh_execute(args + else_pos + 1);
-        }
+    if(args[end_pos + 1] != NULL) {
+        printf("lsh: syntax error near end\n");
+    }
+
+    if (lsh_execute(args + if_pos + 1) == 0) {
+        return lsh_execute(args + then_pos + 1);
+    } else if (else_pos != -1 && else_pos > then_pos && else_pos < end_pos) {
+        return lsh_execute(args + else_pos + 1);
     }
 
     return 1;
