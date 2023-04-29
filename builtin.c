@@ -115,10 +115,6 @@ int lsh_foreground(char **args) {
         int pid = get(bg_pid_list, bg_pid_list->len - 1);
         int status;
 
-        tcsetpgrp(0, pid);
-        setpgid(0, pid);
-        kill(pid, SIGCONT);
-
         do {
             waitpid(pid, &status, WUNTRACED);
         } while (!WIFEXITED(status) && !WIFSIGNALED(status));
