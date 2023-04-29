@@ -25,6 +25,7 @@ int lsh_help(char **args);
 int lsh_exit(char **args);
 int lsh_true(char **args);
 int lsh_false(char **args);
+int lsh_again(char **args);
 int lsh_jobs(char **args);
 int lsh_foreground(char **args);
 int lsh_history(char **args);

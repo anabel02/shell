@@ -10,7 +10,8 @@ char *builtin_str[] = {
         "exit",
         "true",
         "false",
-        "fg"
+        "fg",
+        "again"
 };
 
 
@@ -19,7 +20,8 @@ int (*builtin_func[]) (char **) = {
         &lsh_exit,
         &lsh_true,
         &lsh_false,
-        &lsh_foreground
+        &lsh_foreground,
+        &lsh_again
 };
 
 
@@ -157,6 +159,23 @@ int lsh_history(char **args) {
     }
     fprintf(stdout, "\n");
     return 0;
+}
+
+
+int lsh_again(char **args) {
+    if (args[1] == NULL) {
+        fprintf(stderr, "lsh: again: not enough arguments\n");
+        return 1;
+    }
+    switch (history_length) {
+        case 0:
+            fprintf(stderr, "lsh: again: no commands in history\n");
+            break;
+        default:
+            fprintf(stderr, "%s %d\n", "lsh: again: index must be an integer between 1 and", history_length);
+            break;
+    }
+    return 1;
 }
 
 

@@ -4,9 +4,6 @@
 #include "utils.h"
 #include "execute.h"
 
-/* malloc comando mas largo por cantidad de again
- * liberar
- * again 9 ; again 8 ; again 6*/
 
 char *replace_again(char *line);
 void lsh_loop();
@@ -45,77 +42,58 @@ void lsh_loop() {
         status = lsh_execute(args);
 
         free(line);
+        free(again_line);
         free(cline);
         free(args);
     } while (status >= 0);
 }
 
 
-/** Reemplaza las ocurrencias de again \<command\> por el comando correspondiente en history cuando es un comando válido.
+/** Reemplaza las ocurrencias de again \<command\> por el comando correspondiente en history.
 **/
 char *replace_again(char *line) {
-    int again_pos = kmp_matcher(line, "again");
-    if (again_pos == -1) {
-        return line;
-    }
+    int line_pos = 0;
+
+    List* again_pos_list = kmp_matcher(line, "again");
 
     size_t max_command_length = 0;
     for (int i = 0; i < history_length; ++i) {
         max_command_length = max_command_length > strlen(history[i]) ? max_command_length : strlen(history[i]);
     }
 
-    char *no_again_line = malloc(strlen(line) + max_command_length * 10);
+    char *no_again_line = malloc(strlen(line) + max_command_length * again_pos_list->len);
     int pos = 0;
-    no_again_line[pos] = 0;
 
-    //Si el patrón again está contenido en otra palabra, se ignora
-    if ((again_pos > 0 && !is_special_char_or_blank(line[again_pos - 1]))
-        || !is_special_char_or_blank(line[again_pos + 5])) {
-        int i;
-        for (i = 0; i < again_pos + 5 || !is_special_char_or_blank(line[i]); ++i) {
-            no_again_line[pos++] = line[i];
+    for (int i = 0; i < again_pos_list->len; ++i) {
+        int again_pos = again_pos_list->array[i];
+
+        //Si el patrón again está contenido en otra palabra, se ignora
+        if ((again_pos > 0 && !is_special_char_or_blank(line[again_pos - 1]))
+            || !is_special_char_or_blank(line[again_pos + 5])) {
+            continue;
         }
-        no_again_line[pos] = 0;
-        return strcat(no_again_line, replace_again(line + i));
-    }
 
-    char* arg = malloc(1024);
-    int arg_pos = 0;
-    int j;
-    int blanks = 0;
-    for (j = again_pos + 5; line[j] != 0; ++j) {
-        if ((line[j] == ' ' && arg_pos > 0) || is_special_char(line[j])) {
-            break;
-        } else if (!is_special_char_or_blank(line[j])) {
-            arg[arg_pos++] = line[j];
-        } else {
-            blanks++;
+        int arg_pos;
+        for (arg_pos = again_pos + 6; line[arg_pos] == ' '; ++arg_pos);
+
+        int history_command = string_to_unsigned_int(line + arg_pos);
+
+        if (history_command <= 0 || history_command > history_length) {
+            continue;
         }
-    }
-    arg[arg_pos] = 0;
-    char *ptr;
-    long history_command = strtol(arg, &ptr, 10);
 
-    if (ptr[0] == 0 && history_command > 0 && history_command <= history_length) {
-        blanks = 0;
-        strcpy(arg, history[history_command - 1]);
-        arg[strlen(history[history_command - 1]) - 1] = 0;
-    } else if (history_length == 0) {
-        printf("%s\n", "lsh: history is empty");
-        again_pos += 5;
-    } else {
-        printf("%s %d\n", "lsh: history index must be an integer between 1 and", history_length);
-        again_pos += 5;
+        for (int j = line_pos; j < again_pos; ++j) {
+            no_again_line[pos++] = line[j];
+        }
+        for (int j = 0; j < strlen(history[history_command - 1]) - 1; ++j) {
+            no_again_line[pos++] = history[history_command - 1][j];
+        }
+        line_pos = arg_pos + history_command / 10 + 1;
     }
 
-    for (int i = 0; i < again_pos; ++i) {
-        no_again_line[pos++] = line[i];
-    }
-    for (int i = 0; i < blanks; ++i) {
-        no_again_line[pos++] = ' ';
-    }
+    free(again_pos_list);
+
     no_again_line[pos] = 0;
-    strcat(no_again_line, arg);
-    free(arg);
-    return strcat(no_again_line, replace_again(line + j));
+    strcat(no_again_line, line + line_pos);
+    return no_again_line;
 }

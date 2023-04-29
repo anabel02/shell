@@ -39,7 +39,8 @@ int *compute_prefix_function(char *pattern) {
 }
 
 
-int kmp_matcher(char *text, char *pattern) {
+List* kmp_matcher(char *text, char *pattern) {
+    List* list = new_list();
     size_t n = strlen(text);
     size_t m = strlen(pattern);
     int *pi = compute_prefix_function(pattern);
@@ -57,11 +58,21 @@ int kmp_matcher(char *text, char *pattern) {
             q++;
         }
         if (q == m) {
-            return i - (int)m + 1;
+            append(list, i - (int)m + 1);
         }
     }
     free(pi);
-    return -1;
+    return list;
+}
+
+
+int string_to_unsigned_int(char *str) {
+    char *ptr;
+    long ret = strtol(str, &ptr, 10);
+    if (!is_special_char_or_blank(ptr[0]) || ret < 0) {
+        return -1;
+    }
+    return (int)ret;
 }
 
 
