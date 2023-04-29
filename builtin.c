@@ -14,7 +14,6 @@ char *builtin_str[] = {
 };
 
 
-
 int (*builtin_func[]) (char **) = {
         &lsh_cd,
         &lsh_exit,
@@ -36,7 +35,6 @@ char *builtin_str_out[] = {
 };
 
 
-
 int (*builtin_func_out[]) (char **) = {
         &lsh_help,
         &lsh_jobs,
@@ -47,6 +45,7 @@ int (*builtin_func_out[]) (char **) = {
 int lsh_num_builtins_out() {
     return sizeof(builtin_str_out) / sizeof(char *);
 }
+
 
 int lsh_cd(char **args) {
     if (args[1] == NULL) {
@@ -116,6 +115,10 @@ int lsh_foreground(char **args) {
         int pid = get(bg_pid_list, bg_pid_list->len - 1);
         int status;
 
+        tcsetpgrp(0, pid);
+        setpgid(0, pid);
+        kill(pid, SIGCONT);
+
         do {
             waitpid(pid, &status, WUNTRACED);
         } while (!WIFEXITED(status) && !WIFSIGNALED(status));
@@ -179,25 +182,29 @@ void lsh_load_history() {
     FILE *file;
     file = fopen(path, "r");
     int i = 0;
-    if (file != NULL) {
-        while (status != -1) {
-            char *line = NULL;
-            size_t buf_size = 0;
-            status = (int) getline(&line, &buf_size, file);
-            if (status == -1) {
-                i--;
-                free(line);
-                continue;
-            }
-            if (i == HISTORY_MAX_SIZE) break;
-            strcpy(history[i], line);
-            history_length++;
-            free(line);
-            i++;
-        }
-        fclose(file);
+
+    if(file == NULL){
+        free(path);
+        return;
     }
 
+    while (status != -1) {
+        char *line = NULL;
+        size_t buf_size = 0;
+        status = (int) getline(&line, &buf_size, file);
+        if (status == -1) {
+            i--;
+            free(line);
+            continue;
+        }
+        if (i == HISTORY_MAX_SIZE) break;
+        strcpy(history[i], line);
+        history_length++;
+        free(line);
+        i++;
+    }
+
+    fclose(file);
     free(path);
 }
 

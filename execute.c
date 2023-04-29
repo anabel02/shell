@@ -249,8 +249,7 @@ int lsh_execute_conditional(char **args) {
     for (int j = 1; args[j] != NULL; ++j) {
         if (strcmp(args[j], "if") == 0) {
             conditionals++;
-        }
-        if (strcmp(args[j], "end") == 0) {
+        } else if (strcmp(args[j], "end") == 0) {
             conditionals--;
             if (conditionals != 0) continue;
             end_pos = j;
