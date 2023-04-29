@@ -4,7 +4,6 @@
 #include "utils.h"
 #include "execute.h"
 
-
 char *replace_again(char *line);
 void lsh_loop();
 
