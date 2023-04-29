@@ -5,7 +5,8 @@
 #include "execute.h"
 
 /* malloc comando mas largo por cantidad de again
- * liberar memoria*/
+ * liberar
+ * again 9 ; again 8 ; again 6*/
 
 char *replace_again(char *line);
 void lsh_loop();
@@ -33,12 +34,8 @@ void lsh_loop() {
         lsh_print_prompt();
         line = lsh_read_line();
         again_line = replace_again(line);
-        if (again_line == NULL) {
-            status = 1;
-            continue;
-        }
         if (line[0] != ' ') {
-             lsh_save_history(again_line);
+            lsh_save_history(again_line);
         }
         cline = lsh_clean_line(again_line);
         args = lsh_split_line(cline);
