@@ -73,18 +73,17 @@ int lsh_help(char **args) {
         for (int i = 0; i < lsh_num_commands_help(); i++) {
             printf("%s: %s", commands[i], commands_help[i]);
         }
-        return 0;
-
     } else if (args[2] != NULL){
         fprintf(stderr, "lsh: help: too many arguments\n");
+        return 1;
     } else {
         for (int i = 0; i < lsh_num_commands_help(); i++) {
             if (strcmp(args[1], commands[i]) != 0) continue;
             printf("%s: %s", commands[i], commands_help[i]);
-            return 0;
+            break;
         }
     }
-    return 1;
+    return 0;
 }
 
 
@@ -169,15 +168,12 @@ int lsh_history(char **args) {
 int lsh_again(char **args) {
     if (args[1] == NULL) {
         fprintf(stderr, "lsh: again: not enough arguments\n");
-        return 1;
-    }
-    switch (history_length) {
-        case 0:
-            fprintf(stderr, "lsh: again: no commands in history\n");
-            break;
-        default:
-            fprintf(stderr, "%s %d\n", "lsh: again: index must be an integer between 1 and", history_length);
-            break;
+    } else if (args[2] != NULL) {
+        fprintf(stderr, "lsh: again: too many arguments\n");
+    } else if (history_length == 0) {
+        fprintf(stderr, "lsh: again: no commands in history\n");
+    } else {
+        fprintf(stderr, "%s %d\n", "lsh: again: index must be an integer between 1 and", history_length);
     }
     return 1;
 }
