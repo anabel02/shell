@@ -5,8 +5,7 @@
 #include "execute.h"
 
 /* set j `set i `if ls then cd .. end``
- * set `if ls then cd .. ; ls end`
- * cuando falta el nombre de la variable*/
+ * set `if ls then cd .. ; ls end`*/
 
 void print_args(char** args) {
     for (int i = 0; args[i] != NULL; ++i) {
@@ -208,9 +207,13 @@ int lsh_execute_chain(char **args) {
     }
 
     for (int i = 0; args[i] != NULL; ++i) {
-        if (strcmp(args[i], "set") == 0 && args[i + 1] != NULL && args[i + 2] != NULL) {
-            int post_set = set_command_value(args + 2);
-            i = post_set > -1 ? post_set + i + 2 : i;
+        if (strcmp(args[i], "set") == 0) {
+            int post_set = set_command_value(args);
+            if (post_set < 0) {
+                fprintf(stderr, "lsh: set: error parsing\n");
+                return 1;
+            }
+            i = post_set + i;
             continue;
         }
         if (strcmp(args[i], "if") == 0) {
@@ -280,7 +283,7 @@ int lsh_execute_conditional(char **args) {
     }
 
     if (then_pos == -1 || end_pos == -1 || then_pos > end_pos) {
-        printf("lsh: syntax error in if statement");
+        printf("lsh: syntax error in if statement\n");
         return 1;
     }
 
@@ -297,15 +300,38 @@ int lsh_execute_conditional(char **args) {
     return 1;
 }
 
+char *operators[] = {
+        "&&",
+        "||",
+        ";",
+};
+
+int is_operator(char *s) {
+    for (int i = 0; i < len(operators); ++i) {
+        if (strcmp(s, operators[i]) != 0) continue;
+        return 1;
+    }
+    return 0;
+}
 
 int set_command_value(char **args) {
-    if (strcmp(args[0], "`") != 0) {
+    if (args[0] == NULL || strcmp(args[0], "set") != 0) {
         return -1;
+    }
+    if (args[1] == NULL || is_operator(args[1])) {
+        return 0;
+    }
+    if (strcmp(args[1], "`") == 0) {
+        fprintf(stderr, "lsh: set : variable name is missing\n");
+        return -2;
+    }
+    if (strcmp(args[2], "`") != 0) {
+        return 1;
     }
     int open_sets = 1;
     int simple_quotes = 1;
-    for (int i = 1; args[i] != NULL; ++i) {
-        if (strcmp(args[i], "set") == 0 && args[i + 1] != NULL && args[i + 2] != NULL &&strcmp(args[i + 2], "`") == 0) {
+    for (int i = 3; args[i] != NULL; ++i) {
+        if (strcmp(args[i], "set") == 0 && args[i + 1] != NULL && args[i + 2] != NULL && strcmp(args[i + 2], "`") == 0) {
             open_sets++;
         }
         if (strcmp(args[i], "`") != 0) continue;
@@ -353,12 +379,11 @@ int lsh_execute_set(char **args) {
         return 1;
     }
     if (strcmp(args[2], "`") == 0) {
-        int post_set = set_command_value(args + 2);
+        int post_set = set_command_value(args);
         if (post_set == -1) {
-            fprintf(stderr, "lsh: set: syntax error in set statement, unclosed \'\n");
+            fprintf(stderr, "lsh: set: syntax error in set statement, unclosed `\n");
             return 1;
         }
-        post_set += 2;
         args[post_set] = NULL;
         int fd_out = dup(STDOUT_FILENO);
         int fd[2];
