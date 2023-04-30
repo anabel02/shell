@@ -283,12 +283,12 @@ int lsh_execute_conditional(char **args) {
     }
 
     if (then_pos == -1 || end_pos == -1 || then_pos > end_pos) {
-        printf("lsh: syntax error in if statement\n");
+        printf("lsh: if: syntax error in if statement\n");
         return 1;
     }
 
     if(args[end_pos + 1] != NULL) {
-        printf("lsh: syntax error near end\n");
+        printf("lsh: if: syntax error near end, after if statement must appear a chain operator\n");
     }
 
     if (lsh_execute(args + if_pos + 1) == 0) {
@@ -383,6 +383,9 @@ int lsh_execute_set(char **args) {
         if (post_set == -1) {
             fprintf(stderr, "lsh: set: syntax error in set statement, unclosed `\n");
             return 1;
+        }
+        if (args[post_set + 1] != NULL) {
+            fprintf(stderr, "lsh: set: after set statement must appear a chain operator\n");
         }
         args[post_set] = NULL;
         int fd_out = dup(STDOUT_FILENO);
