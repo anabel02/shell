@@ -22,36 +22,37 @@ int main() {
 
 void lsh_loop() {
     char *line;
-    char *cline;
-    char *again_line;
+    char *clean_line;
+    char *replaced_again_line;
     char **args;
     int status;
 
     do {
         lsh_load_history();
+        lsh_update_background();
 
         lsh_print_prompt();
         line = lsh_read_line();
-        again_line = replace_again(line);
+        replaced_again_line = replace_again(line);
         if (line[0] != ' ') {
-            lsh_save_history(again_line);
+            lsh_save_history(replaced_again_line);
         }
-        cline = lsh_clean_line(again_line);
-        args = lsh_split_line(cline);
-
-        lsh_update_background();
+        clean_line = lsh_clean_line(replaced_again_line);
+        args = lsh_split_line(clean_line);
 
         status = lsh_execute(args);
 
         free(line);
-        free(again_line);
-        free(cline);
+        free(replaced_again_line);
+        free(clean_line);
         free(args);
     } while (status >= 0);
 }
 
 
-/** Reemplaza las ocurrencias de again \<command\> por el comando correspondiente en history.
+/** Reemplaza las ocurrencias de \n
+ * again \<valid_command\> \n
+ * por el comando correspondiente en history.
 **/
 char *replace_again(char *line) {
     int line_pos = 0;

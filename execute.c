@@ -4,16 +4,6 @@
 
 #include "execute.h"
 
-/* set j `set i `if ls then cd .. end``
- * set `if ls then cd .. ; ls end`*/
-
-void print_args(char** args) {
-    for (int i = 0; args[i] != NULL; ++i) {
-        printf("%s ", args[i]);
-    }
-    printf("\n");
-}
-
 
 int len(char **array) {
     int i;
@@ -71,6 +61,8 @@ int lsh_launch(char **args, int fd_in, int fd_out) {
 
 int lsh_execute_simple(char **args, int fd_in, int fd_out)
 {
+    printf(WHITE);
+
     if (args[0] == NULL) {
         return 0;
     }
