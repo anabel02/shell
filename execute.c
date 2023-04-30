@@ -73,10 +73,6 @@ int lsh_execute_simple(char **args, int fd_in, int fd_out)
         return 0;
     }
 
-    if (strcmp(args[0], "set") == 0) {
-        return lsh_execute_set(args);
-    }
-
     for (int i = 0; i < lsh_num_builtins(); i++) {
         if (strcmp(args[0], builtin_str[i]) == 0) {
             return (*builtin_func[i])(args);
@@ -119,6 +115,10 @@ int lsh_execute_redirections_out(char **args, int fd_in, int fd_out) {
 
     if (strcmp(args[0], "if") == 0) {
         return lsh_execute_conditional(args);
+    }
+
+    if (strcmp(args[0], "set") == 0) {
+        return lsh_execute_set(args);
     }
 
     for (int i = 0; args[i] != NULL; ++i) {
@@ -287,7 +287,8 @@ int lsh_execute_conditional(char **args) {
     }
 
     if(args[end_pos + 1] != NULL) {
-        fprintf(stderr, "%s%s", BOLD_RED, "lsh: if: syntax error near end, after if statement must appear a chain operator\n");
+        fprintf(stderr, "%s%s", BOLD_RED, "lsh: if: syntax error near end, after the conditional statement must be a chain operator\n");
+        return 1;
     }
 
     if (lsh_execute(args + if_pos + 1) == 0) {
@@ -460,7 +461,7 @@ int lsh_execute_set(char **args) {
             return 1;
         }
         if (args[set_end + 1] != NULL) {
-            fprintf(stderr, "%s%s", BOLD_RED, "lsh: set: syntax error in set statement\n");
+            fprintf(stderr, "%s%s", BOLD_RED, "lsh: set: syntax error in set statement, after the set statement must be a chain operator\n");
         }
         args[set_end] = NULL;
         char *buffer = malloc(1024);
@@ -479,7 +480,7 @@ int lsh_execute_set(char **args) {
         fprintf(stderr, "%s%s %s%s\n", BOLD_RED, "lsh: set :", args[1], "'s value is empty");
     }
     if (args[3] != NULL) {
-        fprintf(stderr, "%s%s", BOLD_RED, "lsh: set: syntax error in set statement\n");
+        fprintf(stderr, "%s%s", BOLD_RED, "lsh: set: syntax error in set statement, after the set statement must be a chain operator\n");
         return 1;
     }
     return 0;
