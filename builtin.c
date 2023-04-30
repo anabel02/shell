@@ -70,9 +70,7 @@ int lsh_cd(char **args) {
 
 int lsh_help(char **args) {
     if (args[1] == NULL) {
-        for (int i = 0; i < lsh_num_commands_help(); i++) {
-            printf("%s: %s", commands[i], commands_help[i]);
-        }
+        printf("%s", commands_help[0]);
     } else if (args[2] != NULL){
         fprintf(stderr, "%s%s", BOLD_RED, "lsh: help: too many arguments\n");
         return 1;
@@ -80,9 +78,9 @@ int lsh_help(char **args) {
         for (int i = 0; i < lsh_num_commands_help(); i++) {
             if (strcmp(args[1], commands[i]) != 0) continue;
             printf("%s: %s", commands[i], commands_help[i]);
-            break;
+            return 0;
         }
-        fprintf(stderr, "%s%s", BOLD_RED, "lsh: help: command not found\n");
+        fprintf(stderr, "%s%s", BOLD_RED, "lsh: help: command not found.  Try `help help' or 'help'.\n");
         return 1;
     }
     return 0;
