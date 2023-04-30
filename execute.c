@@ -4,10 +4,6 @@
 
 #include "execute.h"
 
-/*anabelbg@LAPTOP-8190EOER:/mnt/c/Users/anabe/CLionProjects/shell/cmake-build-debug $ set b 'cd .. && ls'
-set b 'cd .. && ls'
-ls: cannot access "'": No such file or directory*/
-
 void print_args(char** args) {
     for (int i = 0; args[i] != NULL; ++i) {
         printf("%s ", args[i]);
@@ -211,10 +207,12 @@ int lsh_execute_chain(char **args) {
 
     for (int i = 0; args[i] != NULL; ++i) {
         if (strcmp(args[i], "set") == 0) {
+            if (args[i + 1] == NULL) break;
             int post_set = set_command_value(args + 2);
             i = post_set != -1 ? post_set + i : i;
             continue;
         }
+
         if (strcmp(args[i], "if") == 0) {
             open_conditionals++;
         }

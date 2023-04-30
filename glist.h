@@ -6,6 +6,7 @@
 #define NSH_GLIST_H
 
 #include <stdlib.h>
+#include <string.h>
 
 typedef struct GList{
 	int len;

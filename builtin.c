@@ -11,7 +11,8 @@ char *builtin_str[] = {
         "true",
         "false",
         "fg",
-        "again"
+        "again",
+        "unset"
 };
 
 
@@ -21,7 +22,8 @@ int (*builtin_func[]) (char **) = {
         &lsh_true,
         &lsh_false,
         &lsh_foreground,
-        &lsh_again
+        &lsh_again,
+        &lsh_unset
 };
 
 
@@ -33,14 +35,16 @@ int lsh_num_builtins() {
 char *builtin_str_out[] = {
         "help",
         "jobs",
-        "history"
+        "history",
+        "get"
 };
 
 
 int (*builtin_func_out[]) (char **) = {
         &lsh_help,
         &lsh_jobs,
-        &lsh_history
+        &lsh_history,
+        &lsh_get
 };
 
 
@@ -176,6 +180,43 @@ int lsh_again(char **args) {
             break;
     }
     return 1;
+}
+
+
+int lsh_unset(char **args) {
+    if (args[1] == NULL) {
+        fprintf(stderr, "lsh: unset: not enough arguments\n");
+        return 1;
+    } else if (args[2] != NULL) {
+        fprintf(stderr, "lsh: unset: too many arguments\n");
+        return 1;
+    }
+    int pos = contains(dict_keys, args[1]);
+    if (pos == -1) {
+        fprintf(stderr, "lsh: unset: %s: not a variable\n", args[1]);
+        return 1;
+    }
+    remove_at_g(dict_keys, pos);
+    remove_at_g(dict_values, pos);
+    return 0;
+}
+
+
+int lsh_get(char **args) {
+    if (args[1] == NULL) {
+        fprintf(stderr, "lsh: get: not enough arguments\n");
+        return 1;
+    } else if (args[2] != NULL) {
+        fprintf(stderr, "lsh: get: too many arguments\n");
+        return 1;
+    }
+    int pos = contains(dict_keys, args[1]);
+    if (pos == -1) {
+        fprintf(stderr, "lsh: get: %s: not a variable\n", args[1]);
+        return 1;
+    }
+    fprintf(stdout, "%s\n", (char *)dict_values->array[pos]);
+    return 0;
 }
 
 

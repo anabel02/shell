@@ -64,9 +64,8 @@ int add_at_g(struct GList *list, int index, void *value) {
 
 int contains(struct GList *list, void *value) {
     for (int i = 0; i < list->len; ++i) {
-        if (list->array[i] == value) {
-            return i;
-        }
+        if (strcmp(list->array[i], value) != 0) continue;
+        return i;
     }
     return -1;
 }
