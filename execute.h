@@ -13,6 +13,7 @@
 int lsh_execute(char **args);
 int lsh_execute_conditional(char **args);
 int set_command_value(char **args);
+int find_end(char **args);
 int lsh_execute_set(char **args);
 int lsh_execute_chain(char **args);
 int lsh_background(char **args);

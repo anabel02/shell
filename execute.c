@@ -4,6 +4,11 @@
 
 #include "execute.h"
 
+/* set j 'set i 'if ls then cd .. end' '
+ * parsear separando ''
+ * set 'if ls then cd .. ; ls end'
+ * cuando falta el nombre de la variable*/
+
 void print_args(char** args) {
     for (int i = 0; args[i] != NULL; ++i) {
         printf("%s ", args[i]);
@@ -203,25 +208,17 @@ int lsh_execute_chain(char **args) {
         return 0;
     }
 
-    int open_conditionals = 0;
-
     for (int i = 0; args[i] != NULL; ++i) {
-        if (strcmp(args[i], "set") == 0) {
-            if (args[i + 1] == NULL) break;
+        if (strcmp(args[i], "set") == 0 && args[i + 1] != NULL && args[i + 2] != NULL) {
             int post_set = set_command_value(args + 2);
-            i = post_set != -1 ? post_set + i : i;
+            i = post_set > -1 ? post_set + i + 2 : i;
             continue;
         }
-
         if (strcmp(args[i], "if") == 0) {
-            open_conditionals++;
+            int end_pos = find_end(args);
+            i = end_pos != -1 ? end_pos + i : i;
+            continue;
         }
-        if (strcmp(args[i], "end") == 0) {
-            open_conditionals--;
-        }
-        if (open_conditionals > 0) continue;
-
-
 
         if (strcmp(args[i], ";") == 0) {
             args[i] = NULL;
@@ -253,6 +250,9 @@ int lsh_execute_chain(char **args) {
     args: comando que inicia con el keyword if.
   **/
 int lsh_execute_conditional(char **args) {
+    if (strcmp(args[0], "if") != 0) {
+        return 1;
+    }
     int if_pos = 0;
     args[0] = NULL;
     int then_pos = -1;
@@ -306,12 +306,32 @@ int set_command_value(char **args) {
     int open_sets = 1;
     int simple_quotes = 1;
     for (int i = 1; args[i] != NULL; ++i) {
-        if (strcmp(args[i], "set") == 0) {
+        if (strcmp(args[i], "set") == 0 && args[i + 1] != NULL && args[i + 2] != NULL &&strcmp(args[i + 2], "\'") == 0) {
             open_sets++;
         }
         if (strcmp(args[i], "\'") != 0) continue;
         simple_quotes++;
         if (simple_quotes != open_sets * 2) continue;
+        return i;
+    }
+    return -1;
+}
+
+
+int find_end(char **args) {
+    if (strcmp(args[0], "if") != 0) {
+        return -1;
+    }
+    int open_conditionals = 1;
+    for (int i = 1; args[i] != NULL; ++i) {
+
+        if (strcmp(args[i], "if") == 0) {
+            open_conditionals++;
+        }
+        if (strcmp(args[i], "end") == 0) {
+            open_conditionals--;
+        }
+        if (open_conditionals > 0) continue;
         return i;
     }
     return -1;
@@ -324,8 +344,7 @@ int set_command_value(char **args) {
   **/
 int lsh_execute_set(char **args) {
     if (args[1] == NULL) {
-        int len = dict_keys->len;
-        for (int i = 0; i < len; ++i) {
+        for (int i = 0; i < dict_keys->len; ++i) {
             printf("%s = %s\n", (char *)dict_keys->array[i], (char *)dict_values->array[i]);
         }
         return 0;
@@ -335,11 +354,12 @@ int lsh_execute_set(char **args) {
         return 1;
     }
     if (strcmp(args[2], "\'") == 0) {
-        int post_set = set_command_value(args + 2) + 2;
+        int post_set = set_command_value(args + 2);
         if (post_set == -1) {
             fprintf(stderr, "lsh: set: syntax error in set statement, unclosed \'\n");
             return 1;
         }
+        post_set += 2;
         args[post_set] = NULL;
         int fd_out = dup(STDOUT_FILENO);
         int fd[2];
