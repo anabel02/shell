@@ -38,6 +38,8 @@ int *compute_prefix_function(char *pattern) {
 }
 
 
+/** @return Lista con las posiciones de la apariones de pattern en text, ignora cuando aparece entre comillas.
+ **/
 List* kmp_matcher(char *text, char *pattern) {
     List* list = new_list();
     size_t n = strlen(text);
@@ -100,6 +102,11 @@ char *lsh_read_line(void) {
 }
 
 
+/** Limpia la línea, añadiendo espacios en el caso de command1&&command2 y quitando espacios si sobran. \n
+ * Sustituye el caracter ~ por home/login_user. \n
+ * Ignora lo que aparece luego de #. \n
+ * No modifica lo que se encuentra entre comillas "". \n
+ **/
 char *lsh_clean_line(char *line) {
     int home_dir = 0;
     for (int i = 0; line[i] != 0; ++i) {
@@ -183,6 +190,9 @@ char *lsh_clean_line(char *line) {
 }
 
 
+/**
+ * @return line separada por espacios. No separa lo que se encuentra entre comillas.
+ */
 char **lsh_split_line(char *line) {
     char token_delim[] = " \t\r\n\a";
     size_t buf_size = 64;
@@ -230,7 +240,11 @@ char **lsh_split_line(char *line) {
     return tokens;
 }
 
-
+/**
+ * Imprime el prompt con estructura \n
+ * username\@hostname:cwd $ \n
+ * Si cwd inicia con home/login_user lo sustituye por ~
+ */
 void lsh_print_prompt() {
     struct passwd* pwd = getpwuid(getuid());
 

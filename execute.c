@@ -11,7 +11,13 @@ int len(char **array) {
     return i;
 }
 
-
+/**
+ * Ejecuta los built_in con salida o los comandos del sistema. \n
+ * Modifica la entrada y la salida estándar por las recibidas.
+ * @param fd_in entrada estándar del proceso
+ * @param fd_out salida estándar del proceso
+ * @return 0 si tuvo éxito
+ */
 int lsh_launch(char **args, int fd_in, int fd_out) {
     pid_t pid;
     int status = 0;
@@ -67,6 +73,10 @@ int lsh_execute_simple(char **args, int fd_in, int fd_out)
         return 0;
     }
 
+    if (strcmp(args[0], "set") == 0) {
+        return lsh_execute_set(args);
+    }
+
     for (int i = 0; i < lsh_num_builtins(); i++) {
         if (strcmp(args[0], builtin_str[i]) == 0) {
             return (*builtin_func[i])(args);
@@ -109,10 +119,6 @@ int lsh_execute_redirections_out(char **args, int fd_in, int fd_out) {
 
     if (strcmp(args[0], "if") == 0) {
         return lsh_execute_conditional(args);
-    }
-
-    if (strcmp(args[0], "set") == 0) {
-        return lsh_execute_set(args);
     }
 
     for (int i = 0; args[i] != NULL; ++i) {
@@ -168,6 +174,7 @@ int lsh_execute_redirections_out(char **args, int fd_in, int fd_out) {
 
 
 /** Ejecuta un proceso en el background \n
+ * @param
  * args: comando que termina con el operador &
   **/
 int lsh_background(char **args) {
@@ -308,7 +315,9 @@ int is_operator(char *s) {
 }
 
 
-/** \return
+/** @param
+ * args comando que inicia con el keyword set.
+ * @return
  * índice donde termina el comando set \n
  * -1 en caso de ocurrir un error parseando
   **/
@@ -342,7 +351,8 @@ int parse_set(char **args) {
 
 
 /**Encuentra el end correspondiente al if de args[0] \n
- * \return Índice del end \n
+ * @param args comando que inicia con if
+ * @return Índice del end \n
  * -1 si no se encontró end
  **/
 int find_end(char **args) {
@@ -366,7 +376,7 @@ int find_end(char **args) {
 
 
 /** Ejecuta args y guarda su salida en buffer.
- * \return exit_status de la ejecución de args.
+ * @return exit_status de la ejecución de args.
   **/
 int lsh_stdout_to_buffer(char **args, char *buffer) {
     int fd_out = dup(STDOUT_FILENO);
@@ -398,7 +408,7 @@ int lsh_stdout_to_buffer(char **args, char *buffer) {
 }
 
 /**Guarda el par \<key, value\> como una variable con nombre key y valor value.
- * \return -1 si el valor es vacío \n
+ * @return -1 si el valor es vacío \n
  * 0 en otro caso
   **/
 int save_var(char *key, char *value) {
@@ -422,8 +432,9 @@ int save_var(char *key, char *value) {
 
 
 /** Ejecuta un comando con estructura \n
- * set var /<value/>
- * \param args comando que inicia con el keyword set.
+ * set var \<value\>
+ * @param args comando que inicia con el keyword set.
+ * @return 0 si se ejecutó correctamente
   **/
 int lsh_execute_set(char **args) {
     if (strcmp(args[0], "set") != 0) {
@@ -446,7 +457,7 @@ int lsh_execute_set(char **args) {
             return 1;
         }
         if (args[set_end + 1] != NULL) {
-            fprintf(stderr, "%s%s", BOLD_RED, "lsh: set: after set statement must appear a chain operator\n");
+            fprintf(stderr, "%s%s", BOLD_RED, "lsh: set: after set statement must appear an operator\n");
         }
         args[set_end] = NULL;
         char *buffer = malloc(1024);
@@ -461,7 +472,7 @@ int lsh_execute_set(char **args) {
         fprintf(stderr, "%s%s %s%s\n", BOLD_RED, "lsh: set :", args[1], "'s value must be not empty");
     }
     if (args[3] != NULL) {
-        fprintf(stderr, "%s%s", BOLD_RED, "lsh: set: after set statement must appear a chain operator\n");
+        fprintf(stderr, "%s%s", BOLD_RED, "lsh: set: after set statement must appear an operator\n");
         return 1;
     }
     return 0;
