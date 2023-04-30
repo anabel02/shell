@@ -4,20 +4,19 @@
 
 #include "utils.h"
 
-char specialChars[] = {'|', '<', '>', ';', '&', '\''};
+
+int is_special_double_char(char c) {
+    return c == '|' || c == '<' || c == '>' ||  c == '&';
+}
 
 
-int is_special_char(char c) {
-    for (int i = 0; i < strlen(specialChars); ++i) {
-        if (specialChars[i] != c) continue;
-        return TRUE;
-    }
-    return FALSE;
+int is_special_simple_char(char c) {
+    return c == ';' || c == '`';
 }
 
 
 int is_special_char_or_blank(char c) {
-    return is_special_char(c) || c == ' ' || c == 0;
+    return is_special_double_char(c) || is_special_simple_char(c) || c == ' ' || c == 0;
 }
 
 
@@ -144,7 +143,7 @@ char *lsh_clean_line(char *line) {
             }
             clean_line[pos++] = ' ';
         }
-        if (is_special_char(line[i]) == TRUE){
+        if (is_special_double_char(line[i])){
             if (i > 0 && line[i - 1] == line[i]) {
                 continue;
             }
@@ -158,6 +157,17 @@ char *lsh_clean_line(char *line) {
                 clean_line[pos++] = line[i];
             }
             clean_line[pos++] = ' ';
+            continue;
+        }
+        if (is_special_simple_char(line[i])) {
+            if (clean_line[pos - 1] == ' ') {
+                clean_line[pos++] = line[i];
+            } else {
+                clean_line[pos++] = ' ';
+                clean_line[pos++] = line[i];
+            }
+            clean_line[pos++] = ' ';
+            continue;
         } else {
             clean_line[pos++] = line[i];
             continue;
