@@ -3,6 +3,7 @@
 #include "builtin.h"
 #include "utils.h"
 #include "execute.h"
+#include "glist.h"
 
 char *replace_again(char *line);
 void lsh_loop();
@@ -10,6 +11,8 @@ void lsh_loop();
 
 int main() {
     bg_pid_list = new_list();
+    dict_keys = new_g_list();
+    dict_values = new_g_list();
 
     lsh_loop();
 

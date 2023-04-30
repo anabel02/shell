@@ -12,6 +12,7 @@
 
 #include "list.h"
 #include "help.h"
+#include "glist.h"
 
 #define HISTORY_MAX_SIZE 10
 
@@ -19,6 +20,9 @@ char* history[HISTORY_MAX_SIZE];
 int history_length;
 
 List* bg_pid_list;
+
+GList* dict_keys;
+GList* dict_values;
 
 int lsh_cd(char **args);
 int lsh_help(char **args);
@@ -29,6 +33,8 @@ int lsh_again(char **args);
 int lsh_jobs(char **args);
 int lsh_foreground(char **args);
 int lsh_history(char **args);
+int lsh_get(char **args);
+int lsh_unset(char **args);
 
 void lsh_load_history();
 void lsh_save_history(char *line);

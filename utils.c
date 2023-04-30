@@ -4,7 +4,7 @@
 
 #include "utils.h"
 
-char specialChars[] = {'|', '<', '>', ';', '&'};
+char specialChars[] = {'|', '<', '>', ';', '&', '\''};
 
 
 int is_special_char(char c) {

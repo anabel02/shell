@@ -4,6 +4,10 @@
 
 #include "execute.h"
 
+/*anabelbg@LAPTOP-8190EOER:/mnt/c/Users/anabe/CLionProjects/shell/cmake-build-debug $ set b 'cd .. && ls'
+set b 'cd .. && ls'
+ls: cannot access "'": No such file or directory*/
+
 void print_args(char** args) {
     for (int i = 0; args[i] != NULL; ++i) {
         printf("%s ", args[i]);
@@ -116,6 +120,10 @@ int lsh_execute_redirections_out(char **args, int fd_in, int fd_out) {
         return lsh_execute_conditional(args);
     }
 
+    if (strcmp(args[0], "set") == 0) {
+        return lsh_execute_set(args);
+    }
+
     for (int i = 0; args[i] != NULL; ++i) {
         if (strcmp(args[i], "|") == 0) {
             args[i] = NULL;
@@ -202,6 +210,11 @@ int lsh_execute_chain(char **args) {
     int open_conditionals = 0;
 
     for (int i = 0; args[i] != NULL; ++i) {
+        if (strcmp(args[i], "set") == 0) {
+            int post_set = set_command_value(args + 2);
+            i = post_set != -1 ? post_set + i : i;
+            continue;
+        }
         if (strcmp(args[i], "if") == 0) {
             open_conditionals++;
         }
@@ -209,6 +222,9 @@ int lsh_execute_chain(char **args) {
             open_conditionals--;
         }
         if (open_conditionals > 0) continue;
+
+
+
         if (strcmp(args[i], ";") == 0) {
             args[i] = NULL;
             return lsh_execute_redirections_out(args, -1, -1) + lsh_execute_chain(args + i + 1);
@@ -282,6 +298,98 @@ int lsh_execute_conditional(char **args) {
     }
 
     return 1;
+}
+
+
+int set_command_value(char **args) {
+    if (strcmp(args[0], "\'") != 0) {
+        return -1;
+    }
+    int open_sets = 1;
+    int simple_quotes = 1;
+    for (int i = 1; args[i] != NULL; ++i) {
+        if (strcmp(args[i], "set") == 0) {
+            open_sets++;
+        }
+        if (strcmp(args[i], "\'") != 0) continue;
+        simple_quotes++;
+        if (simple_quotes != open_sets * 2) continue;
+        return i;
+    }
+    return -1;
+}
+
+
+/** Ejecuta un comando con estructura \n
+ * set var /<value/>
+ * \param args comando que inicia con el keyword set.
+  **/
+int lsh_execute_set(char **args) {
+    if (args[1] == NULL) {
+        int len = dict_keys->len;
+        for (int i = 0; i < len; ++i) {
+            printf("%s = %s\n", (char *)dict_keys->array[i], (char *)dict_values->array[i]);
+        }
+        return 0;
+    }
+    if (args[2] == NULL) {
+        fprintf(stderr, "lsh: set: syntax error in set statement\n");
+        return 1;
+    }
+    if (strcmp(args[2], "\'") == 0) {
+        int post_set = set_command_value(args + 2) + 2;
+        if (post_set == -1) {
+            fprintf(stderr, "lsh: set: syntax error in set statement, unclosed \'\n");
+            return 1;
+        }
+        args[post_set] = NULL;
+        int fd_out = dup(STDOUT_FILENO);
+        int fd[2];
+        pipe(fd);
+        dup2(fd[1], STDOUT_FILENO);
+        int status = lsh_execute(args + 3);
+        write(fd[1], "\0", 1);
+        close(fd[1]);
+
+        fflush(stdout);
+        dup2(fd_out, STDOUT_FILENO);
+        close(fd_out);
+        char *buffer = malloc(1024);
+        char c = 1;
+        int i = 0;
+        while (1) {
+            read(fd[0], &c, 1);
+            buffer[i] = c;
+            if (c == '\0') break;
+            if (c == '\n') buffer[i] = ' ';
+            i++;
+            if (i > 1024) {
+                buffer = realloc(buffer, i + 1024);
+            }
+        }
+        close(fd[0]);
+        buffer[i] = '\0';
+        char *key = malloc(strlen(args[1]));
+        char *value = malloc(i);
+        strcpy(key, args[1]);
+        strcpy(value, buffer);
+        append_g(dict_keys, key);
+        append_g(dict_values, value);
+        free(buffer);
+        return status;
+    }
+
+    char *key = malloc(strlen(args[1]));
+    char *value = malloc(strlen(args[2]));
+    strcpy(key, args[1]);
+    strcpy(value, args[2]);
+    append_g(dict_keys, key);
+    append_g(dict_values, value);
+    if (args[3] != NULL) {
+        fprintf(stderr, "lsh: set: syntax error in set statement\n");
+        return 1;
+    }
+    return 0;
 }
 
 
