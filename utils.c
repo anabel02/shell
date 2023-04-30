@@ -78,6 +78,11 @@ int string_to_unsigned_int(char *str) {
 char *lsh_read_line(void) {
     size_t size = 64;
     char *line = malloc(size);
+    if (!line) {
+        fprintf(stderr, "%s%s", BOLD_RED, "lsh: allocation error\n");
+        exit(EXIT_FAILURE);
+    }
+
     int pos = 0;
     char c;
 
@@ -107,7 +112,7 @@ char *lsh_clean_line(char *line) {
     int quotes = 0;
 
     if (!clean_line) {
-        fprintf(stderr, "lsh: allocation error\n");
+        fprintf(stderr, "%s%s", BOLD_RED, "lsh: allocation error\n");
         exit(EXIT_FAILURE);
     }
 
@@ -186,7 +191,7 @@ char **lsh_split_line(char *line) {
     char *token;
 
     if(!tokens) {
-        fprintf(stderr, "lsh: allocation error\n");
+        fprintf(stderr, "%s%s", BOLD_RED, "lsh: allocation error\n");
         exit(EXIT_FAILURE);
     }
 
@@ -197,7 +202,7 @@ char **lsh_split_line(char *line) {
             buf_size *= 2;
             tokens = realloc(tokens, buf_size * sizeof(char*));
             if (!tokens) {
-                fprintf(stderr, "lsh: allocation error\n");
+                fprintf(stderr, "%s%s", BOLD_RED, "lsh: allocation error\n");
                 exit(EXIT_FAILURE);
             }
         }

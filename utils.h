@@ -12,6 +12,8 @@
 #include "list.h"
 
 #define BOLD_CYAN "\033[1;36m"
+#define BOLD_RED "\033[1;31m"
+
 
 char *lsh_read_line(void);
 char *lsh_clean_line(char *line);

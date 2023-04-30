@@ -15,6 +15,7 @@
 #include "glist.h"
 
 #define HISTORY_MAX_SIZE 10
+#define BOLD_RED "\033[1;31m"
 
 char* history[HISTORY_MAX_SIZE];
 int history_length;
