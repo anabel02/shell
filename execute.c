@@ -11,8 +11,10 @@ int len(char **array) {
     return i;
 }
 
+
 /**
  * Ejecuta los built_in con salida o los comandos del sistema. \n
+ *
  * Modifica la entrada y la salida estándar por las recibidas.
  * @param fd_in entrada estándar del proceso
  * @param fd_out salida estándar del proceso
