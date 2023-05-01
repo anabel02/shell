@@ -1,4 +1,4 @@
-## Shell. Proyecto 1 de Sistemas Operativos
+# Shell
 
 ### Integrantes
 - Anabel Benitez Gonzalez C311
