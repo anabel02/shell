@@ -77,10 +77,18 @@ Total: 9.5 puntos
 3. `help` está implementado como un built-in con redirección e interacción completa con las demás funciones.
 
 *variables
-1. Las variables en el proyecto son guardadas en dos listas simulando un diccionario, con relación <key, value> entre elementos con el mismo índice en las dos lístas.
+1. Las variables en nuestro proyecto son guardadas en dos listas simulando un diccionario, con relación <key, value> entre elementos con el mismo índice en las dos lístas.
 2. El comando `set` sin parámetro nos permite ver los valores asignados a cada llave.
-3. El comando `set <key> <value>` es usado para asignarle un valor a una variable. Si la llave no existe se crea, y en caso de existir ya su valor es sustituido por el nuevo valor. 
-4. Otro uso viene dado por las comillas invertidas, el comando `set <llave> comando`, guarda como valor de la llave la salida del comando, para esto se hace un pipe y fork y se ejecuta el comando en el proceso hijo, luego de que este termina se lee el pipe y se copia lo que se lee al valor de la llave.
-5. Si se intenta asignar un valor vacío a una variable dará error y no se asignará ej: `set a set b hola` o `set o ""`.
+3. El comando `set <key> <value>` es usado para asignarle un valor a una variable. Si la llave no existe se crea, y en caso de existir ya su valor es sustituido por el nuevo valor.
+4. En pos de la simplicidad, se decidió que si se desea asignar la cadena de caracteres de value en la variable esta debe encontrarse entre comillas `" "`, en nuestro shell las comillas cumplen la función de tomar como un solo token lo que está contenido entre ellas. Es importante señalar que en caso de no poner comillas se tomará solo el primer caracter correspondiente al valor. Esta decisión fue tomada para que fuera más simple la implementación de `set` como un built-in.
+```  
+set a b c d e            #asigna a la variable a el valor b, y da error porque luego del comando set debe haber o el final de linea o un operador chain
+set a "b c d e"          #si se desea asignar todo debe escribirse
+```
+5. Otro uso viene dado por las comillas invertidas, el comando set \<key\> \`command\`, guarda como valor de la llave la salida del comando, para esto se hace un pipe, luego de que termina de ejecutars el comando se lee el pipe y se copia lo que se lee al valor de la llave. Con esto queda claro que se pueden anidar set, el parseo de estos ocurre en la función `parse_set` de `execute.c` para llevar un balance de a qué set pertenecen las \`.
+6. Si se intenta asignar un valor vacío a una variable dará error y no se asignará ej: `set o ""` dará error.
+```
+set x `set b hola`            #se intenta asignar a x la salida de set b hola que es vacía, por tanto este comando asigna a b y luego da error
+```
 6. La función `unset <key>`, elimina la llave y su valor de las listas.
 7. La función `get <key>` podrá usarse en cualquier contexto e imprime el valor de la llave que se pide. En caso de que no esté la llave se imprime que la llave no fue encontrada.
