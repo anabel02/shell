@@ -23,7 +23,7 @@ $ make
 * if: permite ejecutar comandos de forma condicional (1 punto)
 * multi-if: permite anidar condicionales (0.5 puntos)
 * help: imprime ayuda (1 punto)
-* variables: permite almacenar variables(1 punto)
+* variables: permite almacenar variables (1 punto)
 
 Total: 9.5 puntos
 
