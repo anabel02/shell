@@ -83,7 +83,7 @@ Total: 9.5 puntos
 4. En pos de la simplicidad, se decidió que si se desea asignar la cadena de caracteres de value en la variable esta debe encontrarse entre comillas `" "`, en nuestro shell las comillas cumplen la función de tomar como un solo token lo que está contenido entre ellas. Es importante señalar que en caso de no poner comillas se tomará solo el primer caracter correspondiente al valor. Esta decisión fue tomada para que fuera más simple la implementación de `set` como un built-in.
 ```  
 set a b c d e            #asigna a la variable a el valor b, y da error porque luego del comando set debe haber o el final de linea o un operador chain
-set a "b c d e"          #si se desea asignar todo debe escribirse
+set a "b c d e"          #si se desea asignar todo
 ```
 5. Otro uso viene dado por las comillas invertidas, el comando set \<key\> \`command\`, guarda como valor de la llave la salida del comando, para esto se hace un pipe, luego de que termina de ejecutars el comando se lee el pipe y se copia lo que se lee al valor de la llave. Con esto queda claro que se pueden anidar set, el parseo de estos ocurre en la función `parse_set` de `execute.c` para llevar un balance de a qué set pertenecen las \`.
 6. Si se intenta asignar un valor vacío a una variable dará error y no se asignará ej: `set o ""` dará error.
