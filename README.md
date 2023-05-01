@@ -44,16 +44,16 @@ Total: 9.5 puntos
 
 * background
 1. Se verifica si `&` es el último token de la línea y en la función `lsh_background`  se procede a crear un proceso hijo, en el cual se ejecuta el comando, y se retorna al proceso padre, este no espera al hijo, sino que añade el pid del hijo a una lista de procesos en background, y continua la ejecución del shell. Si no se encuentra el token `&` se ejecuta el comando normalmente.
-2. El comando `jobs` es una función built-in en `builtin.c`, nos permite saber qué procesos están en background, esa información se guarda en la lista antes mencionada, cuando un proceso termina, este se elimina de la lista mediante el método `lsh_update_background()` de `builtin.c`. 
+2. El comando `jobs` es una función built-in en `builtin.c`, nos permite saber qué procesos están en background, esa información se guarda en la lista antes mencionada, cuando un proceso termina, este se elimina de la lista mediante el método `lsh_update_background` de `builtin.c`. 
 3. El comando `fg <pid>` saca al foreground el proceso con pid dado, esto se hace mediante waitpid, en realidad no se saca al fg, si no que se simula, el proceso principal empieza a esperar por el proceso en background. Si no se especifica parámetro entonces `fg` se saca al foreground el último proceso que se mandó al background.
 
 * spaces
-1. El shell permite el uso de cualquier cantidad de espacios entre comandos y operadores, en la función `lsh_clean_line` de `utils.c` se hace un for que recorre la línea, si se encuentra un operador, se añade un espacio a cada lado de este, de esta manera se separan los tokens por espacios, luego en el métode `lsh_split_line` de `utils.c` se hace un split por espacios para separar los tokens. Se da la posibilidad de unir tokens separados por espacios si se usan comillas dobles `" "`.
+1. El shell permite el uso de cualquier cantidad de espacios entre comandos y operadores, en la función `lsh_clean_line` de `utils.c` se hace un for que recorre la línea, si se encuentra un operador, se añade un espacio a cada lado de este, luego en el método `lsh_split_line` de `utils.c` se hace un split por espacios para separar los tokens. Se da la posibilidad de unir tokens separados por espacios si se usan comillas dobles `" "`.
 
 * history 
 1. Se guarda en un archivo ubicado en `/home/user` llamado `.shell_history` las últimas 10 entradas que se ejecutan, excepto aquellas que comiencen con un espacio, esta forma de almacenarlo garantiza persistencia.
 2. El comando `history` imprime las últimas 10 entradas almacenadas en el archivo mencionado, enumeradas del 1 al 10 de más antigua a más reciente.
-3. El comando `again <number>` ejecuta la entrada en history con el número dado. Esto se realiza luego de leerse la línea en la función `replace_again`, que reemplaza las apariciones de `again <number>` válidas, en cualquier lugar de la línea. Si again entre comillas no se reemplaza. Si la línea debe guardarse, se guarda modificada.
+3. El comando `again <number>` ejecuta el comando en history con el número dado. Luego de leerse la línea en la función `replace_again` de `main.c`, se reemplaza las apariciones de `again <number>` válidas, en cualquier lugar de la línea. Si again está entre comillas no se reemplaza. Como se modifica antes de tokenizar queda claro que si la línea debe guardarse, se guarda modificada.
 
 * chain
 1. Se hace un for buscando estos operadores en la función `lsh_execute_chain` de `execute.c` al encontrarse uno se ejecuta lo que está a la izquierda y recursivamente se siguen buscando operadores chain a la derecha.
@@ -62,7 +62,7 @@ Total: 9.5 puntos
 4. El operador `||` continúa ejecutando lo que hay a la derecha solo si el `exit status` de la izquierda fue distinto que 0.
 
 * if
-1. El comando `if <condition> then <command1> else <command2> end`, primero se ejecuta el comando <condition> y en dependencia de su exit status entonces procede a ejecutar then o else con el mismo método.
+1. El comando `if <condition> then <command1> else <command2> end`, primero se ejecuta el comando \<condition\> y en dependencia de su exit status entonces procede a ejecutar then o else.
 2. else es opcional.
 3. if, then, end son obligatorio para que se reconozca la condicional. 
 4. El exit status del if en general está dado por el exit status del then o else, en dependencia, de si el exit status de la condición fue 0 o no respectivamente.
@@ -80,12 +80,12 @@ Total: 9.5 puntos
 1. Las variables en nuestro proyecto son guardadas en dos listas simulando un diccionario, con relación <key, value> entre elementos con el mismo índice en las dos lístas.
 2. El comando `set` sin parámetro nos permite ver los valores asignados a cada llave.
 3. El comando `set <key> <value>` es usado para asignarle un valor a una variable. Si la llave no existe se crea, y en caso de existir ya su valor es sustituido por el nuevo valor.
-4. En pos de la simplicidad, se decidió que si se desea asignar la cadena de caracteres de value en la variable esta debe encontrarse entre comillas `" "`, en nuestro shell las comillas cumplen la función de tomar como un solo token lo que está contenido entre ellas. Es importante señalar que en caso de no poner comillas se tomará solo el primer caracter correspondiente al valor. Esta decisión fue tomada para que fuera más simple la implementación de `set` como un built-in.
+4. En pos de la simplicidad, se decidió que si se desea asignar la cadena de caracteres de value en la variable esta debe encontrarse entre comillas `" "`, en nuestro shell las comillas cumplen la función de tomar como un solo token lo que está contenido entre ellas. Es importante señalar que en caso de no poner comillas se tomará solo el primer token correspondiente al valor. Esta decisión fue tomada para que fuera más simple la implementación de `set` como un built-in.
 ```  
 set a b c d e            #asigna a la variable a el valor b, y da error porque luego del comando set debe haber o el final de linea o un operador chain
 set a "b c d e"          #si se desea asignar todo
 ```
-5. Otro uso viene dado por las comillas invertidas, el comando set \<key\> \`command\`, guarda como valor de la llave la salida del comando, para esto se hace un pipe, luego de que termina de ejecutars el comando se lee el pipe y se copia lo que se lee al valor de la llave. Con esto queda claro que se pueden anidar set, el parseo de estos ocurre en la función `parse_set` de `execute.c` para llevar un balance de a qué set pertenecen las \`.
+5. Otro uso viene dado por las comillas invertidas, el comando set \<key\> \`command\`, guarda como valor de la llave la salida del comando, para esto se hace un pipe donde el comando escribe su salida, luego de que termina de ejecutarse el comando se lee el pipe y se copia lo que se lee al valor de la llave. Con esto queda claro que se pueden anidar set, el parseo de estos ocurre en la función `parse_set` de `execute.c` para llevar un balance de a qué set pertenecen las \`.
 6. Si se intenta asignar un valor vacío a una variable dará error y no se asignará ej: `set o ""` dará error.
 ```
 set x `set b hola`            #se intenta asignar a x la salida de set b hola que es vacía, por tanto este comando asigna a b y luego da error
