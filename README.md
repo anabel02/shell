@@ -35,7 +35,7 @@ Total: 9.5 puntos
 3. El comando `cd <dir>` es implementado como una función built-in en `builtin.c`, se ejecuta directamente desde el proceso principal mediante la función `chdir`. Si se pasa un argumento se cambia al directorio que se pasa como argumento, en caso contrario se cambia al directorio home.
 4. La redireccion de entrada y salida se lleva a cabo en el método `lsh_launch` de `execute.c`, luego del fork, en el proceso hijo antes de hacer execvp, mediante la funcion `dup2`, se cambia la salida o entrada estándar al fichero que se pasa como argumento, el fichero se abre solamente en el proceso hijo con la función `open`.
 5. El uso de tuberías se explica con más detalles en el apartado multi-pipe, su funcionamiento está basado en que antes de hacer fork si se detecta un pipe `|` se abren dos file descriptors con la función `pipe`, y se asigna con `dup2`, la salida estándar del primer proceso al pipe (lo que está a la izquierda), y la entrada estándar del segundo proceso al pipe (lo que está a la derecha), de esta manera la salida del primer proceso es la entrada del segundo.
-6. Una vez el comando hijo termina, el padre que hacía wait, continua la ejecución, de esta manera el shell siempre es un loop que espera por EOF para terminar, y siempre que termine un comando, mostrará el prompt esperando por la próxima instrucción.
+6. El shell se implementa como un loop, puede observarse en la función `lsh_loop` de `main.c`, siempre que termine de ejecutar un comando mostrará el prompt esperando por la próxima instrucción.
 7. Este punto se explica con más detalle en el apartado spaces, en general se permiten cualquier cantidad de espacios entre los tokens, al ser separados por un espacio cada uno, se hace un split por espacios y se separa cada token.
 8. Todos los tokens que se encuentren después del token # serán ignorados por el shell. Si se desea terminar la ejecución del shell, el comando exit hará que el shell salga del loop antes mencionado y termine.
 
@@ -44,7 +44,7 @@ Total: 9.5 puntos
 
 * background
 1. Se verifica si `&` es el último token de la línea y en la función `lsh_background`  se procede a crear un proceso hijo, en el cual se ejecuta el comando, y se retorna al proceso padre, este no espera al hijo, sino que añade el pid del hijo a una lista de procesos en background, y continua la ejecución del shell. Si no se encuentra el token `&` se ejecuta el comando normalmente.
-2. El comando `jobs` una función built-in en `builtin.c`, nos permite saber que procesos están en background, esa info se guarda en la lista antes mencionada, cuando un proceso termina, este se elimina de la lista mediante el método `lsh_update_background()` de `builtin.c`. 
+2. El comando `jobs` es una función built-in en `builtin.c`, nos permite saber qué procesos están en background, esa información se guarda en la lista antes mencionada, cuando un proceso termina, este se elimina de la lista mediante el método `lsh_update_background()` de `builtin.c`. 
 3. El comando `fg <pid>` saca al foreground el proceso con pid dado, esto se hace mediante waitpid, en realidad no se saca al fg, si no que se simula, el proceso principal empieza a esperar por el proceso en background. Si no se especifica parámetro entonces `fg` se saca al foreground el último proceso que se mandó al background.
 
 * spaces
