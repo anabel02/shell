@@ -11,7 +11,6 @@ En la carpeta raíz del proyecto ejecutar el siguiente comando:
 ```
 $ make 
 ```
-
 ### Funcionalidades implementadas
 
 * basic: funcionalidades básicas (3 puntos)
