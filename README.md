@@ -90,5 +90,5 @@ set a "b c d e"          #si se desea asignar todo
 ```
 set x `set b hola`            #se intenta asignar a x la salida de set b hola que es vacía, por tanto este comando asigna a b y luego da error
 ```
-6. La función `unset <key>`, elimina la llave y su valor de las listas.
-7. La función `get <key>` podrá usarse en cualquier contexto e imprime el valor de la llave que se pide. En caso de que no esté la llave se imprime que la llave no fue encontrada.
+7. La función `unset <key>`, elimina la llave y su valor de las listas.
+8. La función `get <key>` podrá usarse en cualquier contexto e imprime el valor de la llave que se pide. En caso de que no esté la llave se imprime que la llave no fue encontrada.
