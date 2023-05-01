@@ -1,7 +1,7 @@
 # Shell
 
 ### Integrantes
-- Anabel Benitez Gonzalez C311
+- Anabel Benítez González C311
 - Anthuán Montes de Oca Pons C311
 
 El objetivo del proyecto es implementar una terminal de comandos en C que simule las del sistema operativo Linux.
