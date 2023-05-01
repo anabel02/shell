@@ -76,7 +76,7 @@ Total: 9.5 puntos
 2. El comando `help <command>` imprime la ayuda del comando correspondiente si existe, un mensaje de error si no.
 3. `help` está implementado como un built-in con redirección e interacción completa con las demás funciones.
 
-*variables
+* variables
 1. Las variables en nuestro proyecto son guardadas en dos listas simulando un diccionario, con relación <key, value> entre elementos con el mismo índice en las dos lístas.
 2. El comando `set` sin parámetro nos permite ver los valores asignados a cada llave.
 3. El comando `set <key> <value>` es usado para asignarle un valor a una variable. Si la llave no existe se crea, y en caso de existir ya su valor es sustituido por el nuevo valor.
