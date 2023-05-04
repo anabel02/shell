@@ -462,6 +462,7 @@ int lsh_execute_set(char **args) {
         }
         if (args[set_end + 1] != NULL) {
             fprintf(stderr, "%s%s", BOLD_RED, "lsh: set: syntax error in set statement, after the set statement must be a chain operator\n");
+            return 1;
         }
         args[set_end] = NULL;
         char *buffer = malloc(1024);
@@ -472,12 +473,14 @@ int lsh_execute_set(char **args) {
         }
         if (save_var(args[1], buffer) != 0) {
             fprintf(stderr, "%s%s %s%s\n", BOLD_RED, "lsh: set : ", args[1], "'s value is empty");
+            return 1;
         }
         free(buffer);
         return status;
     }
     if (save_var(args[1], args[2]) != 0) {
         fprintf(stderr, "%s%s %s%s\n", BOLD_RED, "lsh: set :", args[1], "'s value is empty");
+        return 1;
     }
     if (args[3] != NULL) {
         fprintf(stderr, "%s%s", BOLD_RED, "lsh: set: syntax error in set statement, after the set statement must be a chain operator\n");
