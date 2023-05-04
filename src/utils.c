@@ -258,7 +258,7 @@ void lsh_print_prompt() {
         cwd = realloc(cwd, capacity);
     }
     char env[] = "~";
-    printf("%s%s@%s:%s $ ", BOLD_CYAN, pwd->pw_name, hostname,
+    printf("%s%s@%s:%s$ ", BOLD_CYAN, pwd->pw_name, hostname,
            strncmp(cwd, getenv("HOME"), strlen(getenv("HOME"))) == 0 ?
            strcat(env, cwd + strlen(getenv("HOME"))) :
            cwd);
