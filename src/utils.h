@@ -13,6 +13,7 @@
 
 #define BOLD_CYAN "\033[1;36m"
 #define BOLD_RED "\033[1;31m"
+#define WHITE "\033[0m"
 
 
 char *lsh_read_line(void);
