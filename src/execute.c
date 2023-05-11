@@ -44,7 +44,8 @@ int lsh_launch(char **args, int fd_in, int fd_out) {
         }
 
         if (execvp(args[0], args) == -1) {
-            perror("lsh");
+            fprintf(stderr, "%s%s", BOLD_RED, "lsh: command not found\n");
+            printf(WHITE);
         }
         exit(EXIT_FAILURE);
     } else {
@@ -99,6 +100,7 @@ int lsh_execute_redirections_in(char **args, int fd_in, int fd_out) {
         int exit_status = lsh_execute_simple(args, fd, fd_out);
         if(args[i + 2] != NULL) {
             fprintf(stderr, "%s%s", BOLD_RED, "lsh: syntax error near <\n");
+            printf(WHITE);
             return 1;
         }
         close(fd);
@@ -149,6 +151,7 @@ int lsh_execute_redirections_out(char **args, int fd_in, int fd_out) {
             close(fd);
             if(args[i + 2] != NULL) {
                 fprintf(stderr, "%s%s", BOLD_RED,"lsh: syntax error near >\n");
+                printf(WHITE);
                 return 1;
             }
             return exit_status;
@@ -164,6 +167,7 @@ int lsh_execute_redirections_out(char **args, int fd_in, int fd_out) {
             close(fd);
             if(args[i + 2] != NULL) {
                 fprintf(stderr, "%s%s", BOLD_RED,"lsh: syntax error near >>\n");
+                printf(WHITE);
                 return 1;
             }
             return exit_status;
@@ -210,6 +214,7 @@ int lsh_execute_chain(char **args) {
             int set_end = parse_set(args + i);
             if (set_end < 0) {
                 fprintf(stderr, "%s%s", BOLD_RED, "lsh: set: parse error\n");
+                printf(WHITE);
                 return 1;
             }
             i = set_end + i;
@@ -283,11 +288,13 @@ int lsh_execute_conditional(char **args) {
 
     if (then_pos == -1 || end_pos == -1 || then_pos > end_pos) {
         fprintf(stderr, "%s%s", BOLD_RED, "lsh: if: syntax error in if statement\n");
+        printf(WHITE);
         return 1;
     }
 
     if(args[end_pos + 1] != NULL) {
         fprintf(stderr, "%s%s", BOLD_RED, "lsh: if: syntax error near end, after the conditional statement must be a chain operator\n");
+        printf(WHITE);
         return 1;
     }
 
@@ -331,6 +338,7 @@ int parse_set(char **args) {
     }
     if (strcmp(args[1], "`") == 0) {
         fprintf(stderr, "%s%s", BOLD_RED, "lsh: set : variable name is missing\n");
+        printf(WHITE);
         return -1;
     }
     if (args[2] == NULL) {
@@ -452,16 +460,19 @@ int lsh_execute_set(char **args) {
     }
     if (args[2] == NULL) {
         fprintf(stderr, "%s%s", BOLD_RED, "lsh: set: syntax error in set statement\n");
+        printf(WHITE);
         return 1;
     }
     if (strcmp(args[2], "`") == 0) {
         int set_end = parse_set(args);
         if (set_end == -1) {
             fprintf(stderr, "%s%s", BOLD_RED, "lsh: set: syntax, unclosed `\n");
+            printf(WHITE);
             return 1;
         }
         if (args[set_end + 1] != NULL) {
             fprintf(stderr, "%s%s", BOLD_RED, "lsh: set: syntax error in set statement, after the set statement must be a chain operator\n");
+            printf(WHITE);
             return 1;
         }
         args[set_end] = NULL;
@@ -469,10 +480,12 @@ int lsh_execute_set(char **args) {
         int status = lsh_stdout_to_buffer(args + 3, buffer);
         if (status > 0) {
             fprintf(stderr, "%s%s", BOLD_RED, "lsh: set: execution error inside ``\n");
+            printf(WHITE);
             return 1;
         }
         if (save_var(args[1], buffer) != 0) {
             fprintf(stderr, "%s%s %s%s\n", BOLD_RED, "lsh: set : ", args[1], "'s value is empty");
+            printf(WHITE);
             return 1;
         }
         free(buffer);
@@ -480,10 +493,12 @@ int lsh_execute_set(char **args) {
     }
     if (save_var(args[1], args[2]) != 0) {
         fprintf(stderr, "%s%s %s%s\n", BOLD_RED, "lsh: set :", args[1], "'s value is empty");
+        printf(WHITE);
         return 1;
     }
     if (args[3] != NULL) {
         fprintf(stderr, "%s%s", BOLD_RED, "lsh: set: syntax error in set statement, after the set statement must be a chain operator\n");
+        printf(WHITE);
         return 1;
     }
     return 0;
