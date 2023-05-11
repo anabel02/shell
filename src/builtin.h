@@ -19,13 +19,13 @@
 #define BOLD_RED "\033[1;31m"
 #define WHITE "\033[0m"
 
-char* history[HISTORY_MAX_SIZE];
-int history_length;
+extern char* history[HISTORY_MAX_SIZE];
+extern int history_length;
 
-List* bg_pid_list;
+extern List* bg_pid_list;
 
-GList* dict_keys;
-GList* dict_values;
+extern GList* dict_keys;
+extern GList* dict_values;
 
 int lsh_cd(char **args);
 int lsh_help(char **args);
