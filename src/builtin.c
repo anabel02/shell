@@ -4,6 +4,13 @@
 
 #include "builtin.h"
 
+char* history[HISTORY_MAX_SIZE];
+int history_length = 0;
+
+List* bg_pid_list = NULL;
+
+GList* dict_keys = NULL;
+GList* dict_values = NULL;
 
 char *builtin_str[] = {
         "cd",
