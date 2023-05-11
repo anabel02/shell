@@ -63,15 +63,12 @@ int lsh_num_builtins_out() {
 int lsh_cd(char **args) {
     if (args[1] == NULL) {
         if (chdir(getenv("HOME")) == 0) return 0;
-        fprintf(stderr, "%s%s", BOLD_RED, "lsh: cd: No such file or directory");
-        printf(WHITE);
+        print_error("lsh: cd: No such file or directory\n");
     } else if (args[2] != NULL){
-        fprintf(stderr, "%s%s", BOLD_RED, "lsh: cd: too many arguments\n");
-        printf(WHITE);
+        print_error("lsh: cd: too many arguments\n");
     } else {
         if (chdir(args[1]) == 0) return 0;
-        fprintf(stderr, "%s%s", BOLD_RED, "lsh: cd: No such file or directory");
-        printf(WHITE);
+        print_error("lsh: cd: No such file or directory\n");
     }
     return 1;
 }
@@ -81,8 +78,7 @@ int lsh_help(char **args) {
     if (args[1] == NULL) {
         printf("%s", commands_help[0]);
     } else if (args[2] != NULL){
-        fprintf(stderr, "%s%s", BOLD_RED, "lsh: help: too many arguments\n");
-        printf(WHITE);
+        print_error("lsh: help: too many arguments\n");
         return 1;
     } else {
         for (int i = 0; i < lsh_num_commands_help(); i++) {
@@ -90,8 +86,7 @@ int lsh_help(char **args) {
             printf("%s: %s", commands[i], commands_help[i]);
             return 0;
         }
-        fprintf(stderr, "%s%s", BOLD_RED, "lsh: help: command not found.  Try `help help' or 'help'.\n");
-        printf(WHITE);
+        print_error("lsh: help: command not found. Try `help help' or 'help'\n");
         return 1;
     }
     return 0;
@@ -115,8 +110,7 @@ int lsh_false(char **args) {
 
 int lsh_jobs(char **args) {
     if (args[1] != NULL) {
-        fprintf(stderr, "%s%s", BOLD_RED, "lsh: jobs: too many arguments\n");
-        printf(WHITE);
+        print_error("lsh: jobs: too many arguments\n");
         return 1;
     } else {
         for (int i = 0; i < bg_pid_list->len; ++i) {
@@ -138,8 +132,7 @@ int lsh_foreground(char **args) {
 
         remove_at(bg_pid_list, bg_pid_list->len - 1);
     } else if (args[2] != NULL) {
-        fprintf(stderr, "%s%s", BOLD_RED, "lsh: fg: too many arguments\n");
-        printf(WHITE);
+        print_error("lsh: fg: too many arguments\n");
         return 1;
     } else {
         int pid = atoi(args[1]);
@@ -150,8 +143,7 @@ int lsh_foreground(char **args) {
             break;
         }
         if (pid_list_pos == -1) {
-            fprintf(stderr, "%s%s", BOLD_RED, "lsh: fg: no such job\n");
-            printf(WHITE);
+            print_error("lsh: fg: no such job\n");
             return 1;
         }
         int status;
@@ -168,7 +160,7 @@ int lsh_foreground(char **args) {
 
 int lsh_history(char **args) {
     if (args[1] != NULL){
-        fprintf(stderr, "%s%s", BOLD_RED, "lsh: history: too many arguments\n");
+        print_error("lsh: history: too many arguments\n");
         return 1;
     }
     for (int i = 0; i < history_length; ++i) {
@@ -181,33 +173,29 @@ int lsh_history(char **args) {
 
 int lsh_again(char **args) {
     if (args[1] == NULL) {
-        fprintf(stderr, "%s%s", BOLD_RED, "lsh: again: not enough arguments\n");
+        print_error("lsh: again: not enough arguments\n");
     } else if (args[2] != NULL) {
-        fprintf(stderr, "%s%s", BOLD_RED, "lsh: again: too many arguments\n");
+        print_error("lsh: again: too many arguments\n");
     } else if (history_length == 0) {
-        fprintf(stderr, "%s%s", BOLD_RED, "lsh: again: no commands in history\n");
+        print_error("lsh: again: no commands in history\n");
     } else {
-        fprintf(stderr, "%s%s %d\n", BOLD_RED, "lsh: again: index must be an integer between 1 and", history_length);
+        print_error("lsh: again: index must be an integer between 1 and history_length\n");
     }
-    printf(WHITE);
     return 1;
 }
 
 
 int lsh_unset(char **args) {
     if (args[1] == NULL) {
-        fprintf(stderr, "%s%s", BOLD_RED, "lsh: unset: not enough arguments\n");
-        printf(WHITE);
+        print_error("lsh: unset: not enough arguments\n");
         return 1;
     } else if (args[2] != NULL) {
-        fprintf(stderr, "%s%s", BOLD_RED, "lsh: unset: too many arguments\n");
-        printf(WHITE);
+        print_error("lsh: unset: too many arguments\n");
         return 1;
     }
     int pos = contains(dict_keys, args[1]);
     if (pos == -1) {
-        fprintf(stderr, "%slsh: unset: %s isn't a variable\n", BOLD_RED, args[1]);
-        printf(WHITE);
+        print_error("lsh: unset: variable not found\n");
         return 1;
     }
     remove_at_g(dict_keys, pos);
@@ -218,18 +206,15 @@ int lsh_unset(char **args) {
 
 int lsh_get(char **args) {
     if (args[1] == NULL) {
-        fprintf(stderr, "%s%s", BOLD_RED, "lsh: get: not enough arguments\n");
-        printf(WHITE);
+        print_error("lsh: get: not enough arguments\n");
         return 1;
     } else if (args[2] != NULL) {
-        fprintf(stderr, "%s%s", BOLD_RED, "lsh: get: too many arguments\n");
-        printf(WHITE);
+        print_error("lsh: get: too many arguments\n");
         return 1;
     }
     int pos = contains(dict_keys, args[1]);
     if (pos == -1) {
-        fprintf(stderr, "%slsh: get: %s isn't a variable\n", BOLD_RED, args[1]);
-        printf(WHITE);
+        print_error("lsh: get: variable not found\n");
         return 1;
     }
     fprintf(stdout, "%s\n", (char *)dict_values->array[pos]);

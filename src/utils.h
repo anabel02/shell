@@ -15,7 +15,7 @@
 #define BOLD_RED "\033[1;31m"
 #define WHITE "\033[0m"
 
-
+void print_error(char *msg);
 char *lsh_read_line(void);
 char *lsh_clean_line(char *line);
 char **lsh_split_line(char *line);

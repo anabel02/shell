@@ -19,6 +19,8 @@
 #define BOLD_RED "\033[1;31m"
 #define WHITE "\033[0m"
 
+#include "utils.h"
+
 extern char* history[HISTORY_MAX_SIZE];
 extern int history_length;
 

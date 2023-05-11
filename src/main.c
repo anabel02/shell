@@ -65,6 +65,10 @@ char *replace_again(char *line) {
     }
 
     char *no_again_line = malloc(strlen(line) + max_command_length * again_pos_list->len);
+    if (!no_again_line) {
+        print_error("lsh: allocation error\n");
+        exit(EXIT_FAILURE);
+    }
     int pos = 0;
 
     for (int i = 0; i < again_pos_list->len; ++i) {

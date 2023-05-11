@@ -11,6 +11,7 @@
 
 #include <fcntl.h>
 #include "builtin.h"
+#include "utils.h"
 
 int lsh_execute(char **args);
 int lsh_execute_conditional(char **args);

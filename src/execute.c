@@ -25,7 +25,7 @@ int lsh_launch(char **args, int fd_in, int fd_out) {
     pid = fork();
 
     if (pid < 0) {
-        perror("lsh");
+        print_error("lsh: error forking\n");
     } else if (pid == 0) {
         if (fd_in > 0) {
             dup2(fd_in, STDIN_FILENO);
@@ -44,8 +44,7 @@ int lsh_launch(char **args, int fd_in, int fd_out) {
         }
 
         if (execvp(args[0], args) == -1) {
-            fprintf(stderr, "%s%s", BOLD_RED, "lsh: command not found\n");
-            printf(WHITE);
+            print_error("lsh: command not found\n");
         }
         exit(EXIT_FAILURE);
     } else {
@@ -94,13 +93,12 @@ int lsh_execute_redirections_in(char **args, int fd_in, int fd_out) {
         args[i] = NULL;
         int fd = open(args[i + 1], O_RDONLY);
         if (fd == -1) {
-            perror("lsh");
+            print_error("lsh: error opening file\n");
             return 1;
         }
         int exit_status = lsh_execute_simple(args, fd, fd_out);
         if(args[i + 2] != NULL) {
-            fprintf(stderr, "%s%s", BOLD_RED, "lsh: syntax error near <\n");
-            printf(WHITE);
+            print_error("lsh: syntax error near <\n");
             return 1;
         }
         close(fd);
@@ -128,7 +126,7 @@ int lsh_execute_redirections_out(char **args, int fd_in, int fd_out) {
             args[i] = NULL;
             int fd[2];
             if (pipe(fd) == -1) {
-                perror("lsh");
+                print_error("lsh: error creating pipe\n");
                 return 1;
             }
 
@@ -143,15 +141,14 @@ int lsh_execute_redirections_out(char **args, int fd_in, int fd_out) {
             args[i] = NULL;
             int fd = open(args[i + 1], O_WRONLY | O_CREAT | O_TRUNC, 0644);
             if (fd == -1) {
-                perror("lsh");
+                print_error("lsh: error opening file\n");
                 return 1;
             }
 
             int exit_status = lsh_execute_redirections_in(args, fd_in, fd);
             close(fd);
             if(args[i + 2] != NULL) {
-                fprintf(stderr, "%s%s", BOLD_RED,"lsh: syntax error near >\n");
-                printf(WHITE);
+                print_error("lsh: syntax error near >\n");
                 return 1;
             }
             return exit_status;
@@ -166,8 +163,7 @@ int lsh_execute_redirections_out(char **args, int fd_in, int fd_out) {
             int exit_status = lsh_execute_redirections_in(args, fd_in, fd);
             close(fd);
             if(args[i + 2] != NULL) {
-                fprintf(stderr, "%s%s", BOLD_RED,"lsh: syntax error near >>\n");
-                printf(WHITE);
+                print_error("lsh: syntax error near >>\n");
                 return 1;
             }
             return exit_status;
@@ -185,7 +181,7 @@ int lsh_background(char **args) {
     args[len(args) - 1] = NULL;
     pid_t pid = fork();
     if (pid < 0) {
-        perror("lsh");
+        print_error("lsh: error forking\n");
     } else if (pid == 0) {
         setpgid(0, 0);
         lsh_execute_redirections_out(args, -1, -1);
@@ -213,8 +209,7 @@ int lsh_execute_chain(char **args) {
         if (strcmp(args[i], "set") == 0) {
             int set_end = parse_set(args + i);
             if (set_end < 0) {
-                fprintf(stderr, "%s%s", BOLD_RED, "lsh: set: parse error\n");
-                printf(WHITE);
+                print_error("lsh: set: parsing error\n");
                 return 1;
             }
             i = set_end + i;
@@ -222,7 +217,11 @@ int lsh_execute_chain(char **args) {
         }
         if (strcmp(args[i], "if") == 0) {
             int end_pos = find_end(args);
-            i = end_pos != -1 ? end_pos + i : i;
+            if (end_pos < 0) {
+                print_error("lsh: if: parsing error\n");
+                return 1;
+            }
+            i = end_pos + i;
             continue;
         }
 
@@ -287,14 +286,12 @@ int lsh_execute_conditional(char **args) {
     }
 
     if (then_pos == -1 || end_pos == -1 || then_pos > end_pos) {
-        fprintf(stderr, "%s%s", BOLD_RED, "lsh: if: syntax error in if statement\n");
-        printf(WHITE);
+        print_error("lsh: if: syntax error in if statement\n");
         return 1;
     }
 
     if(args[end_pos + 1] != NULL) {
-        fprintf(stderr, "%s%s", BOLD_RED, "lsh: if: syntax error near end, after the conditional statement must be a chain operator\n");
-        printf(WHITE);
+        print_error("lsh: if: syntax error near end, after the conditional statement must be a chain operator\n");
         return 1;
     }
 
@@ -337,8 +334,7 @@ int parse_set(char **args) {
         return 0;
     }
     if (strcmp(args[1], "`") == 0) {
-        fprintf(stderr, "%s%s", BOLD_RED, "lsh: set : variable name is missing\n");
-        printf(WHITE);
+        print_error("lsh: set: variable name is missing\n");
         return -1;
     }
     if (args[2] == NULL) {
@@ -459,46 +455,39 @@ int lsh_execute_set(char **args) {
         return 0;
     }
     if (args[2] == NULL) {
-        fprintf(stderr, "%s%s", BOLD_RED, "lsh: set: syntax error in set statement\n");
-        printf(WHITE);
+        print_error("lsh: set: value is missing\n");
         return 1;
     }
     if (strcmp(args[2], "`") == 0) {
         int set_end = parse_set(args);
         if (set_end == -1) {
-            fprintf(stderr, "%s%s", BOLD_RED, "lsh: set: syntax, unclosed `\n");
-            printf(WHITE);
+            print_error("lsh: set: syntax error in set statement, missing `\n");
             return 1;
         }
         if (args[set_end + 1] != NULL) {
-            fprintf(stderr, "%s%s", BOLD_RED, "lsh: set: syntax error in set statement, after the set statement must be a chain operator\n");
-            printf(WHITE);
+            print_error("lsh: set: syntax error in set statement, after the set statement must be a chain operator\n");
             return 1;
         }
         args[set_end] = NULL;
         char *buffer = malloc(1024);
         int status = lsh_stdout_to_buffer(args + 3, buffer);
         if (status > 0) {
-            fprintf(stderr, "%s%s", BOLD_RED, "lsh: set: execution error inside ``\n");
-            printf(WHITE);
+            print_error("lsh: set: execution error inside ``\n");
             return 1;
         }
         if (save_var(args[1], buffer) != 0) {
-            fprintf(stderr, "%s%s %s%s\n", BOLD_RED, "lsh: set : ", args[1], "'s value is empty");
-            printf(WHITE);
+            print_error("lsh: set: value is empty\n");
             return 1;
         }
         free(buffer);
         return status;
     }
     if (save_var(args[1], args[2]) != 0) {
-        fprintf(stderr, "%s%s %s%s\n", BOLD_RED, "lsh: set :", args[1], "'s value is empty");
-        printf(WHITE);
+        print_error("lsh: set: value is empty\n");
         return 1;
     }
     if (args[3] != NULL) {
-        fprintf(stderr, "%s%s", BOLD_RED, "lsh: set: syntax error in set statement, after the set statement must be a chain operator\n");
-        printf(WHITE);
+        print_error("lsh: set: syntax error in set statement, after the set statement must be a chain operator\n");
         return 1;
     }
     return 0;
