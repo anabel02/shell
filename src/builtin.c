@@ -221,8 +221,9 @@ int lsh_get(char **args) {
     return 0;
 }
 
-/** \return Path del archivo history.
- **/
+/**
+ * \return Path del archivo history.
+ */
 char *lsh_path_history() {
     char *path = (char *) malloc((strlen(getenv("HOME")) + strlen("/.shell_history")));
     strcpy(path, getenv("HOME"));
@@ -231,8 +232,9 @@ char *lsh_path_history() {
 }
 
 
-/** Carga history desde su archivo.
- **/
+/**
+ * Carga history desde su archivo.
+ */
 void lsh_load_history() {
     for(int i = 0; i < HISTORY_MAX_SIZE; i++){
         history[i] = malloc(1024 * sizeof(char));
@@ -270,8 +272,9 @@ void lsh_load_history() {
 }
 
 
-/** Guarda line como última posición de history.
- **/
+/**
+ * Guarda line como última posición de history.
+ */
 void lsh_save_history(char *line) {
     if (history_length == HISTORY_MAX_SIZE) {
         for (int i = 0; i < HISTORY_MAX_SIZE - 1; ++i) {
@@ -294,7 +297,9 @@ void lsh_save_history(char *line) {
 }
 
 
-/** Remueve del background los procesos que no entén vivos**/
+/**
+ * Remueve del background los procesos que no entén vivos
+ */
 void lsh_update_background() {
     int status;
     for (int i = 0; i < bg_pid_list->len; ++i) {

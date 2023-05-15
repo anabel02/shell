@@ -50,10 +50,11 @@ void lsh_loop() {
 }
 
 
-/** Reemplaza las ocurrencias de \n
+/**
+ * Reemplaza las ocurrencias de \n
  * again \<valid_command\> \n
  * por el comando correspondiente en history.
-**/
+ */
 char *replace_again(char *line) {
     int line_pos = 0;
 

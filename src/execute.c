@@ -67,8 +67,6 @@ int lsh_launch(char **args, int fd_in, int fd_out) {
 
 int lsh_execute_simple(char **args, int fd_in, int fd_out)
 {
-    printf(WHITE);
-
     if (args[0] == NULL) {
         return 0;
     }
@@ -173,10 +171,11 @@ int lsh_execute_redirections_out(char **args, int fd_in, int fd_out) {
 }
 
 
-/** Ejecuta un proceso en el background \n
+/**
+ * Ejecuta un proceso en el background \n
  * @param
  * args: comando que termina con el operador &
-  **/
+ */
 int lsh_background(char **args) {
     args[len(args) - 1] = NULL;
     pid_t pid = fork();
@@ -196,10 +195,11 @@ int lsh_background(char **args) {
 }
 
 
-/** Si el comando está separado por caracteres de cadena && ; ||
+/**
+ * Si el comando está separado por caracteres de cadena && ; ||
  * ejecuta su respectiva funcionalidad, si no lo está revisa
  * si debe ejecutarse en el background o no y lo ejecuta en dependencia.
-  **/
+ */
 int lsh_execute_chain(char **args) {
     if (args[0] == NULL) {
         return 0;
@@ -251,9 +251,9 @@ int lsh_execute_chain(char **args) {
 
 /** Ejecuta una condicional con estructura \n
  * if \<command1\> then \<command2\> else \<command3\> end.
-    \param
-    args: comando que inicia con el keyword if.
-  **/
+ * \param
+ * args: comando que inicia con el keyword if.
+ */
 int lsh_execute_conditional(char **args) {
     if (strcmp(args[0], "if") != 0) {
         return 1;
@@ -320,12 +320,13 @@ int is_operator(char *s) {
 }
 
 
-/** @param
+/**
+ * @param
  * args comando que inicia con el keyword set.
  * @return
  * índice donde termina el comando set \n
  * -1 en caso de ocurrir un error parseando
-  **/
+ */
 int parse_set(char **args) {
     if (args[0] == NULL || strcmp(args[0], "set") != 0) {
         return -1;
@@ -358,11 +359,12 @@ int parse_set(char **args) {
 }
 
 
-/**Encuentra el end correspondiente al if de args[0] \n
+/**
+ * Encuentra el end correspondiente al if de args[0] \n
  * @param args comando que inicia con if
  * @return Índice del end \n
  * -1 si no se encontró end
- **/
+ */
 int find_end(char **args) {
     if (strcmp(args[0], "if") != 0) {
         return -1;
@@ -383,9 +385,10 @@ int find_end(char **args) {
 }
 
 
-/** Ejecuta args y guarda su salida en buffer.
+/**
+ * Ejecuta args y guarda su salida en buffer.
  * @return exit_status de la ejecución de args.
-  **/
+ */
 int lsh_stdout_to_buffer(char **args, char *buffer) {
     int fd_out = dup(STDOUT_FILENO);
     int fd[2];
@@ -415,10 +418,11 @@ int lsh_stdout_to_buffer(char **args, char *buffer) {
     return status;
 }
 
-/**Guarda el par \<key, value\> como una variable con nombre key y valor value.
+/**
+ * Guarda el par \<key, value\> como una variable con nombre key y valor value.
  * @return -1 si el valor es vacío \n
  * 0 en otro caso
-  **/
+ */
 int save_var(char *key, char *value) {
     if (value[0] == 0) {
         return -1;
@@ -439,11 +443,12 @@ int save_var(char *key, char *value) {
 }
 
 
-/** Ejecuta un comando con estructura \n
+/**
+ * Ejecuta un comando con estructura \n
  * set var \<value\>
  * @param args comando que inicia con el keyword set.
  * @return 0 si se ejecutó correctamente
-  **/
+ */
 int lsh_execute_set(char **args) {
     if (strcmp(args[0], "set") != 0) {
         return 1;
